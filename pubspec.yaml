@@ -15,10 +15,10 @@ environment:
 dependencies:
   sqflite: any
   uuid: ^1.0.3
-  screen: ^0.0.4
+  # screen: ^0.0.4
   date_format: ^1.0.5
   speech_recognition: ^0.3.0+1
-  vibrate: ^0.0.4
+  # vibrate: ^0.0.4
   flutter:
     sdk: flutter
 
