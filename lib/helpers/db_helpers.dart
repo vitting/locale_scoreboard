@@ -49,9 +49,9 @@ class DbHelpers {
     return dbCon.insert(table, item);
   }
 
-  Future<int> update(String table, Map<String, dynamic> item) async {
+  Future<int> update(String table, Map<String, dynamic> item, String where, List<dynamic> whereArgs) async {
     Database dbCon = await db;
-    return dbCon.update(table, item);
+    return dbCon.update(table, item, where: where, whereArgs: whereArgs);
   } 
 
   Future<int> delete(String table, String id) async {

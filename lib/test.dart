@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:locale_scoreboard/helpers/db_helpers.dart';
-import 'package:locale_scoreboard/helpers/db_sql_create.dart';
-import 'package:locale_scoreboard/helpers/system_helpers.dart';
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+
+class Language {
+  final String name;
+  final String code;
+
+  const Language(this.name, this.code);
+}
 
 class TestWidget extends StatefulWidget {
   static final routeName = "/test";
@@ -12,6 +15,7 @@ class TestWidget extends StatefulWidget {
 }
 
 class _TestWidgetState extends State<TestWidget> {
+  FlutterTts flutterTts = new FlutterTts();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,27 +26,21 @@ class _TestWidgetState extends State<TestWidget> {
             RaisedButton(
               child: Text("Test"),
               onPressed: () async {
-                DbHelpers db = DbHelpers();
-                int value = await db.insert(DbSql.tableMatches, {
-                  "id": SystemHelpers.generateUuid(),
-                  "title": "test2",
-                  "createdDate": 0,
-                  "matchDate": 0,
-                  "namePlayer1Team1": "anne",
-                  "namePlayer2Team1": "irene",
-                  "namePlayer1Team2": "bente",
-                  "namePlayer2Team2": "lise",
-                  "active": 0
-                });
-                print(value);
+                List<dynamic> languages = await flutterTts.getLanguages;
+                print(languages);
+                await flutterTts.setLanguage("en-US");
+                await flutterTts.setSpeechRate(0.5);
+                await flutterTts.setVolume(1.0);
+                await flutterTts.setPitch(1.0);
+                await flutterTts.isLanguageAvailable("en-US");
+
+                var result = await flutterTts.speak("Team A 25 points and Team B 21 points");
               },
             ),
             RaisedButton(
               child: Text("Test2"),
               onPressed: () async {
-                DbHelpers db = DbHelpers();
-                List<Map<String, dynamic>> values = await db.query(DbSql.tableMatches);
-                print(values);
+
               },
             )
           ],
