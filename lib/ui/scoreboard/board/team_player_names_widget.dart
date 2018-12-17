@@ -12,6 +12,7 @@ class TeamPlayerNames extends StatefulWidget {
   final String player2Name;
   final Color teamColor;
   final Color teamActiveColor;
+  final Color playerActiveColor;
   final int playerActive;
   final ValueChanged<TeamServe> onSetServeOrder;
 
@@ -22,6 +23,7 @@ class TeamPlayerNames extends StatefulWidget {
       this.teamActiveColor,
       this.playerActive,
       this.teamColor,
+      this.playerActiveColor,
       this.onSetServeOrder})
       : super(key: key);
 
@@ -36,7 +38,6 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
   GlobalKey _keyPlayer2Name = GlobalKey();
   int _player1ServeOrder = 0;
   int _player2ServeOrder = 0;
-  Color _playerActiveColor = Colors.deepOrange[900];
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +60,7 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
                 key: _keyPlayer1Name,
                 onLongPress: () async {
                   TeamServe teamServe =
-                      await setServer(context, _keyPlayer1Name, 1);
+                      await setServer(context, _keyPlayer1Name, 1, widget.player1Name);
                   if (widget.onSetServeOrder != null) {
                     widget.onSetServeOrder(teamServe);
                   }
@@ -84,7 +85,7 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: widget.playerActive == 1
-                                    ? _playerActiveColor
+                                    ? widget.playerActiveColor
                                     : Colors.white),
                           )
                         : Container(),
@@ -102,7 +103,7 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
                 key: _keyPlayer2Name,
                 onLongPress: () async {
                   TeamServe teamServe =
-                      await setServer(context, _keyPlayer2Name, 2);
+                      await setServer(context, _keyPlayer2Name, 2, widget.player2Name);
                   if (widget.onSetServeOrder != null) {
                     widget.onSetServeOrder(teamServe);
                   }
@@ -127,7 +128,7 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: widget.playerActive == 2
-                                    ? _playerActiveColor
+                                    ? widget.playerActiveColor
                                     : Colors.white),
                           )
                         : Container(),
@@ -144,8 +145,7 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
     );
   }
 
-  Future<TeamServe> setServer(
-      BuildContext context, GlobalKey playerKey, int player) async {
+  Future<TeamServe> setServer(BuildContext context, GlobalKey playerKey, int player, String playerName) async {
     final RenderBox renderBox = playerKey.currentContext.findRenderObject();
     var translation = renderBox.getTransformTo(null).getTranslation();
     TeamServe teamServe;
@@ -156,7 +156,7 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
         items: [
           PopupMenuItem(
             value: 1,
-            child: Text("Set as first server"),
+            child: Text("Set $playerName as first server"),
           )
         ]);
 

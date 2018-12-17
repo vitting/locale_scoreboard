@@ -1,0 +1,42 @@
+import 'package:flutter/material.dart';
+
+class HelpSetPlayerOrder extends StatelessWidget {
+  final bool show;
+  final ValueChanged<bool> onTap;
+
+  const HelpSetPlayerOrder({Key key, this.show, this.onTap}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 140,
+      left: (MediaQuery.of(context).size.width / 2) - 100,
+      width: 200,
+      child: AnimatedOpacity(
+        duration: Duration(milliseconds: 400),
+        opacity: show ? 1.0 : 0.0,
+        child: InkWell(
+          onTap: () {
+            onTap(true);
+          },
+          child: Container(
+            padding: EdgeInsets.all(10),
+            height: 120,
+            decoration: BoxDecoration(
+                shape: BoxShape.rectangle,
+                color: Colors.deepPurple[800],
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(color: Colors.white, width: 1.0)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text("Long press names of players to set order of serve",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                    textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
