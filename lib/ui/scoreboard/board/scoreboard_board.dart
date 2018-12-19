@@ -1,23 +1,28 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/help_set_player_order_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_order_of_serve_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_start_with_serve_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_winner_of_draw_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/start_match_widget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/board/team_control_widget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/board/team_player_names_widget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/board/team_points_widget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/board/team_sets_widget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/board/team_timeouts_widget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/board/team_title_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/controls/team_control_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/set_time_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/team_player_names_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/team_points_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/team_sets_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/team_timeouts_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/team_title_widget.dart';
 
 class ScoreboardBoard extends StatefulWidget {
   @override
   _ScoreboardBoardState createState() => _ScoreboardBoardState();
 }
 
-class _ScoreboardBoardState extends State<ScoreboardBoard> {
+class _ScoreboardBoardState extends State<ScoreboardBoard>
+    with TickerProviderStateMixin {
+  StreamController<TimerState> _timeController =
+      StreamController<TimerState>.broadcast();
   Color teamAColor = Colors.white;
   Color teamBColor = Colors.white;
   Color teamAColorControls = Colors.white;
@@ -42,10 +47,15 @@ class _ScoreboardBoardState extends State<ScoreboardBoard> {
   int teamBPoints = 0;
   int teamATimeouts = 0;
   int teamBTimeouts = 0;
-  int controlStep = 0;
+  int _controlStep = 0;
   bool _showBox1 = false;
-  CrossFadeState _resultsState = CrossFadeState.showFirst;
-  CrossFadeState _controlsState = CrossFadeState.showFirst;
+  CrossFadeState _mainDisplay = CrossFadeState.showFirst;
+
+  @override
+  void dispose() {
+    _timeController.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +90,20 @@ class _ScoreboardBoardState extends State<ScoreboardBoard> {
                             winnerOfServe: teamAWinnerOfServe,
                             team: 1,
                           ),
+                          InkWell(
+                            onLongPress: () {
+                              _timeController.add(TimerState.cancel);                                                            
+                            },
+                            onDoubleTap: () {
+                              _timeController.add(TimerState.reset);                                                            
+                            },
+                            onTap: () {
+                              _timeController.add(TimerState.start);                                                            
+                            },
+                            child: SetTime(
+                              timeStream: _timeController.stream,
+                            ),
+                          ),
                           TeamTitle(
                             color: teamBColor,
                             text: "Team B",
@@ -113,12 +137,8 @@ class _ScoreboardBoardState extends State<ScoreboardBoard> {
                         ],
                       ),
                       Padding(padding: EdgeInsets.symmetric(vertical: 10.0)),
-                      AnimatedCrossFade(
-                        crossFadeState: _resultsState,
-                        duration: Duration(milliseconds: 400),
-                        firstChild: Container(),
-                        secondChild: results(),
-                      ),
+                      results(),
+                      // results(),
                     ],
                   ),
                 ),
@@ -126,11 +146,12 @@ class _ScoreboardBoardState extends State<ScoreboardBoard> {
                   color: Colors.white,
                 ),
                 AnimatedCrossFade(
-                  crossFadeState: _controlsState,
-                  duration: Duration(milliseconds: 400),
-                  firstChild: setupSet(),
-                  secondChild: controls(),
-                )
+                  sizeCurve: Curves.easeIn,
+                  duration: Duration(milliseconds: 500),
+                  crossFadeState: _mainDisplay,
+                  firstChild: _controlStep == 0 ? setupSet() : Container(),
+                  secondChild: _controlStep == 1 ? controls() : Container(),
+                ),
               ],
             ),
           ),
@@ -200,8 +221,9 @@ class _ScoreboardBoardState extends State<ScoreboardBoard> {
             color: _buttonColor,
             onTap: (_) {
               setState(() {
-                _resultsState = CrossFadeState.showSecond;
-                _controlsState = CrossFadeState.showSecond;
+                _mainDisplay = CrossFadeState.showSecond;
+                _controlStep = 1;
+                _timeController.add(TimerState.start);
               });
             },
           )
@@ -263,37 +285,49 @@ class _ScoreboardBoardState extends State<ScoreboardBoard> {
   }
 
   Widget results() {
-    return Column(
-      children: <Widget>[
-        TeamSets(
-            teamAColor: teamAColor,
-            teamBColor: teamBColor,
-            teamAColorActive: teamAColorActive,
-            teamBColorActive: teamBColorActive,
-            teamASets: teamASets,
-            teamBSets: teamBSets),
-        Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
-        Row(
-          children: <Widget>[
-            TeamPoints(
-                activeColor: teamAColorActive,
-                color: teamAColor,
-                points: teamAPoints),
-            TeamPoints(
-                activeColor: teamBColorActive,
-                color: teamBColor,
-                points: teamBPoints)
-          ],
-        ),
-        Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
-        TeamTimeouts(
-            teamAColor: teamAColor,
-            teamBColor: teamBColor,
-            teamAColorActive: teamAColorActive,
-            teamBColorActive: teamBColorActive,
-            teamATimeouts: teamATimeouts,
-            teamBTimeouts: teamBTimeouts)
-      ],
+    return Container(
+      child: Column(
+        children: <Widget>[
+          TeamSets(
+              teamAColor: teamAColor,
+              teamBColor: teamBColor,
+              teamAColorActive: teamAColorActive,
+              teamBColorActive: teamBColorActive,
+              teamASets: teamASets,
+              teamBSets: teamBSets),
+          Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
+          Row(
+            children: <Widget>[
+              TeamPoints(
+                  activeColor: teamAColorActive,
+                  color: teamAColor,
+                  points: teamAPoints),
+              TeamPoints(
+                  activeColor: teamBColorActive,
+                  color: teamBColor,
+                  points: teamBPoints)
+            ],
+          ),
+          Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
+          TeamTimeouts(
+              teamAColor: teamAColor,
+              teamBColor: teamBColor,
+              teamAColorActive: teamAColorActive,
+              teamBColorActive: teamBColorActive,
+              teamATimeouts: teamATimeouts,
+              teamBTimeouts: teamBTimeouts),
+        ],
+      ),
+    );
+  }
+
+  Widget setScore() {
+    return Container(
+      child: Column(
+        children: <Widget>[
+          
+        ],
+      ),
     );
   }
 
