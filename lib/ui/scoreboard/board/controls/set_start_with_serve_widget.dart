@@ -13,31 +13,36 @@ class SetStartWithServe extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text("Set Team starting with the Serve", style: TextStyle(color: Colors.white))
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-              child: RaisedButton(
-                color: teamAButtonColor,
-                onPressed: () {
-                  onTapTeam(1);
-                },
-                child: Text("Team A", style: TextStyle(color: Colors.white)),
+            InkWell(
+              onTap: () {
+                onTapTeam(1);
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: teamAButtonColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.0)),
+                child: Center(child: Text("A", style: TextStyle(color: Colors.white)))
               ),
             ),
-            SizedBox(
-              width: 30,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text("Set starting with the serve", style: TextStyle(color: Colors.white)),
             ),
-            Expanded(
-              child: RaisedButton(
-                color: teamBButtonColor,
-                onPressed: () {
-                  onTapTeam(2);
-                },
-                child: Text("Team B", style: TextStyle(color: Colors.white)),
+            InkWell(
+              onTap: () {
+                onTapTeam(2);
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: teamBButtonColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.0)),
+                child: Center(child: Text("B", style: TextStyle(color: Colors.white)))
               ),
             ),
           ],

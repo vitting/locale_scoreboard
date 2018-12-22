@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:locale_scoreboard/main_inheretedwidget.dart';
+import 'package:vibrate/vibrate.dart';
 
 class TeamServe {
   final int first;
@@ -146,6 +148,9 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
   }
 
   Future<TeamServe> setServer(BuildContext context, GlobalKey playerKey, int player, String playerName) async {
+    if (MainInherited.of(context).canVibrate) {
+      Vibrate.feedback(FeedbackType.success);
+    }
     final RenderBox renderBox = playerKey.currentContext.findRenderObject();
     var translation = renderBox.getTransformTo(null).getTranslation();
     TeamServe teamServe;

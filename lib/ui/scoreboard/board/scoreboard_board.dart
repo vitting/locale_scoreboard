@@ -1,5 +1,6 @@
 import 'dart:async';
-
+import 'package:locale_scoreboard/main_inheretedwidget.dart';
+import 'package:vibrate/vibrate.dart';
 import 'package:flutter/material.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/help_set_player_order_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_order_of_serve_widget.dart';
@@ -7,6 +8,7 @@ import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_start_with_se
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_winner_of_draw_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/start_match_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/team_control_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/set_score_container_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/set_time_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/team_player_names_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/team_points_widget.dart';
@@ -32,7 +34,6 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   Color teamBColorDefault = Colors.blue[500];
   Color teamAColorActive = Colors.blue[900];
   Color teamBColorActive = Colors.blue[500];
-  Color _buttonColor = Colors.green[900];
   bool teamAActive = false;
   bool teamBActive = false;
   bool teamAWinnerOfServe = false;
@@ -49,6 +50,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   int teamBTimeouts = 0;
   int _controlStep = 0;
   bool _showBox1 = false;
+  int _elapsedTime = 0;
   CrossFadeState _mainDisplay = CrossFadeState.showFirst;
 
   @override
@@ -92,16 +94,19 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                           ),
                           InkWell(
                             onLongPress: () {
-                              _timeController.add(TimerState.cancel);                                                            
+                              _timeController.add(TimerState.cancel);
                             },
                             onDoubleTap: () {
-                              _timeController.add(TimerState.reset);                                                            
+                              _timeController.add(TimerState.reset);
                             },
                             onTap: () {
-                              _timeController.add(TimerState.start);                                                            
+                              _timeController.add(TimerState.start);
                             },
                             child: SetTime(
                               timeStream: _timeController.stream,
+                              onTimeChange: (int time) {
+                                _elapsedTime = time;
+                              },
                             ),
                           ),
                           TeamTitle(
@@ -138,7 +143,6 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                       ),
                       Padding(padding: EdgeInsets.symmetric(vertical: 10.0)),
                       results(),
-                      // results(),
                     ],
                   ),
                 ),
@@ -187,11 +191,10 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                 });
               }
             },
-            teamAButtonColor: _buttonColor,
-            teamBButtonColor: _buttonColor,
+            teamAButtonColor: teamAColorDefault,
+            teamBButtonColor: teamBColorDefault,
           ),
           SetOrderOfServe(
-            color: _buttonColor,
             onTap: (_) {
               setState(() {
                 _showBox1 = true;
@@ -214,11 +217,10 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                 });
               }
             },
-            teamAButtonColor: _buttonColor,
-            teamBButtonColor: _buttonColor,
+            teamAButtonColor: teamAColorDefault,
+            teamBButtonColor: teamBColorDefault,
           ),
           StartMatch(
-            color: _buttonColor,
             onTap: (_) {
               setState(() {
                 _mainDisplay = CrossFadeState.showSecond;
@@ -316,22 +318,17 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
               teamBColorActive: teamBColorActive,
               teamATimeouts: teamATimeouts,
               teamBTimeouts: teamBTimeouts),
-        ],
-      ),
-    );
-  }
-
-  Widget setScore() {
-    return Container(
-      child: Column(
-        children: <Widget>[
-          
+          SetScoreContainer()
         ],
       ),
     );
   }
 
   void addPoints(Team team) {
+    if (MainInherited.of(context).canVibrate) {
+      Vibrate.feedback(FeedbackType.success);
+    }
+
     if (team == Team.a) {
       setState(() {
         teamAPoints++;
@@ -348,6 +345,9 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   }
 
   void removePoints(Team team) {
+    if (MainInherited.of(context).canVibrate) {
+      Vibrate.feedback(FeedbackType.success);
+    }
     if (team == Team.a) {
       if (teamAPoints > 0) {
         setState(() {
@@ -366,6 +366,9 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   }
 
   void addTimeouts(Team team) {
+    if (MainInherited.of(context).canVibrate) {
+      Vibrate.feedback(FeedbackType.success);
+    }
     if (team == Team.a) {
       setState(() {
         teamATimeouts++;
@@ -378,6 +381,9 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   }
 
   void removeTimeouts(Team team) {
+    if (MainInherited.of(context).canVibrate) {
+      Vibrate.feedback(FeedbackType.success);
+    }
     if (team == Team.a) {
       if (teamATimeouts > 0) {
         setState(() {
@@ -393,19 +399,28 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     }
   }
 
-  checkPointsStatus(int pointsA, int pointsB) {
+  void checkPointsStatus(int pointsA, int pointsB) {
     Team teamWon = checkIfSetIsWon(pointsA, pointsB);
 
     if (teamWon != null) {
+      if (MainInherited.of(context).canVibrate) {
+        Vibrate.feedback(FeedbackType.success);
+      }
       String team = teamWon == Team.a ? "A" : "B";
       showSetWon(context, team);
     }
 
     if (teamWon == null && checkIfSideChange(pointsA, pointsB)) {
+      if (MainInherited.of(context).canVibrate) {
+        Vibrate.feedback(FeedbackType.success);
+      }
       showSideChange(context);
     }
 
     if (teamWon == null && checkIfTechnicalTimeout(pointsA, pointsB)) {
+      if (MainInherited.of(context).canVibrate) {
+        Vibrate.feedback(FeedbackType.success);
+      }
       showTechnicalTimeout(context);
     }
   }
