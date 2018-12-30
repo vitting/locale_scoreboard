@@ -2,10 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+class TimerValues {
+  final TimerState timerState;
+  final int time;
+
+  TimerValues(this.timerState, this.time);
+}
+
 enum TimerState { start, cancel, reset, setTime }
 
 class SetTime extends StatefulWidget {
-  final Stream<TimerState> timeStream;
+  final Stream<TimerValues> timeStream;
   final ValueChanged<int> onTimeChange;
 
   const SetTime({Key key, this.timeStream, this.onTimeChange})
@@ -24,10 +31,11 @@ class _SetTimeState extends State<SetTime> {
   @override
   void initState() {
     super.initState();
-
-    widget.timeStream.listen((TimerState state) {
-      switch (state) {
+    
+    widget.timeStream.listen((TimerValues state) {
+      switch (state.timerState) {
         case TimerState.start:
+          _elapsedTime = state.time;
           if (_timer == null) {
             _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
               _elapsedTime += 1;

@@ -2,6 +2,7 @@ class DbSql {
   static final String tableMatches = "matches";
   static final String tableScores = "scores";
   static final String tableSets = "sets";
+  static final String tableStatistics = "statistics";
   static final String colId = "id";
   static final String colTitle = "title";
   static final String colCreatedDate = "createdDate";
@@ -11,8 +12,11 @@ class DbSql {
   static final String colNamePlayer1Team2 = "namePlayer1Team2";
   static final String colNamePlayer2Team2 = "namePlayer2Team2";
   static final String colActive = "active";
+  static final String colMatchDuration = "matchDuration";
   static final String colMatchStartedAt = "matchStartedAt";
   static final String colMatchEndedAt = "matchEndedAt";
+  static final String colMatchTime = "matchTime";
+  static final String colMatchCurrentTime = "matchCurrentTime";
   static final String colSetTeam1 = "setTeam1";
   static final String colSetTeam2 = "setTeam2";
   static final String colPointsTeam1 = "pointsTeam1";
@@ -26,7 +30,12 @@ class DbSql {
   static final String colSetStart = "setStart";
   static final String colSetEnd = "setEnd";
   static final String colWinnerTeam = "winnerTeam";
-  static final String createMatches = "CREATE TABLE [$tableMatches]([$colId] TEXT(50) PRIMARY KEY NOT NULL UNIQUE, [$colTitle] TEXT(100) NOT NULL, [$colCreatedDate] INTEGER NOT NULL, [$colMatchDate] INTEGER NOT NULL, [$colNamePlayer1Team1] TEXT(50) NOT NULL, [$colNamePlayer2Team1] TEXT(50) NOT NULL, [$colNamePlayer1Team2] TEXT(50) NOT NULL, [$colNamePlayer2Team2] TEXT(50) NOT NULL, [$colActive] INTEGER NOT NULL DEFAULT 0);";
-  static final String createScores = "CREATE TABLE [$tableScores]([$colId] TEXT(50) PRIMARY KEY NOT NULL UNIQUE, [$colMatchId] TEXT NOT NULL, [$colMatchStartedAt] INTEGER, [$colMatchEndedAt] INTEGER, [$colSetTeam1] INTEGER NOT NULL DEFAULT 0, [$colSetTeam2] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam1] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam2] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam1] INTEGER NOT NULL DEFAULT 0, [$colSetTeam2] INTEGER NOT NULL DEFAULT 0, [$colStartTeam] INTEGER NOT NULL DEFAULT 0, [$colActiveTeam] INTEGER NOT NULL DEFAULT 0);";
-  static final String createSets = "CREATE TABLE [$tableSets]([$colId] TEXT(50) PRIMARY KEY NOT NULL UNIQUE, [$colMatchId] TEXT NOT NULL, [$colStartTeam] INTEGER NOT NULL DEFAULT 0, [$colSetNumber] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam1] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam2] INTEGER NOT NULL DEFAULT 0, [$colSetTeam1] INTEGER NOT NULL DEFAULT 0, [$colSetTeam2] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam1] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam2] INTEGER NOT NULL DEFAULT 0, [$colSetStart] INTEGER NOT NULL DEFAULT 0, [$colSetEnd] INTEGER NOT NULL DEFAULT 0, [$colWinnerTeam] INTEGER NOT NULL DEFAULT 0);";
+  static final String createMatches = "CREATE TABLE IF NOT EXISTS [$tableMatches]([$colId] TEXT(50) PRIMARY KEY NOT NULL UNIQUE, [$colTitle] TEXT(100) NOT NULL, [$colCreatedDate] INTEGER NOT NULL, [$colMatchStartedAt] INTEGER NOT NULL, [$colMatchEndedAt] INTEGER NOT NULL, [$colNamePlayer1Team1] TEXT(50) NOT NULL, [$colNamePlayer2Team1] TEXT(50) NOT NULL, [$colNamePlayer1Team2] TEXT(50) NOT NULL, [$colNamePlayer2Team2] TEXT(50) NOT NULL, [$colActive] INTEGER NOT NULL DEFAULT 0);";
+  static final String createScores = "CREATE TABLE IF NOT EXISTS [$tableScores]([$colId] TEXT(50) PRIMARY KEY NOT NULL UNIQUE, [$colMatchId] TEXT NOT NULL, [$colMatchDuration] INTEGER NOT NULL DEFAULT 0, [$colSetTeam1] INTEGER NOT NULL DEFAULT 0, [$colSetTeam2] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam1] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam2] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam1] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam2] INTEGER NOT NULL DEFAULT 0, [$colStartTeam] INTEGER NOT NULL DEFAULT 0, [$colActiveTeam] INTEGER NOT NULL DEFAULT 0);";
+  static final String createSets = "CREATE TABLE IF NOT EXISTS [$tableSets]([$colId] TEXT(50) PRIMARY KEY NOT NULL UNIQUE, [$colMatchId] TEXT NOT NULL, [$colStartTeam] INTEGER NOT NULL DEFAULT 0, [$colSetNumber] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam1] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam2] INTEGER NOT NULL DEFAULT 0, [$colSetTeam1] INTEGER NOT NULL DEFAULT 0, [$colSetTeam2] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam1] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam2] INTEGER NOT NULL DEFAULT 0, [$colSetStart] INTEGER NOT NULL DEFAULT 0, [$colSetEnd] INTEGER NOT NULL DEFAULT 0, [$colWinnerTeam] INTEGER NOT NULL DEFAULT 0);";
+  static final String createStatistics = "CREATE TABLE IF NOT EXISTS [$tableStatistics]([$colId] TEXT(50) PRIMARY KEY NOT NULL UNIQUE, [$colMatchId] TEXT NOT NULL, [$colMatchTime] INTEGER NOT NULL, [$colMatchDuration] INTEGER NOT NULL DEFAULT 0, [$colSetTeam1] INTEGER NOT NULL DEFAULT 0, [$colSetTeam2] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam1] INTEGER NOT NULL DEFAULT 0, [$colPointsTeam2] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam1] INTEGER NOT NULL DEFAULT 0, [$colTimeoutsTeam2] INTEGER NOT NULL DEFAULT 0, [$colStartTeam] INTEGER NOT NULL DEFAULT 0, [$colActiveTeam] INTEGER NOT NULL DEFAULT 0);";
+  static final String dropMatches = "DROP TABLE IF EXISTS $tableMatches;";
+  static final String dropScores = "DROP TABLE IF EXISTS $tableScores;";
+  static final String dropSets = "DROP TABLE IF EXISTS $tableSets;";
+  static final String dropStatistics = "DROP TABLE IF EXISTS $tableStatistics;";
 }

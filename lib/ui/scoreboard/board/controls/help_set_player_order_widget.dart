@@ -8,7 +8,7 @@ class HelpSetPlayerOrder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 140,
+      top: 130,
       left: (MediaQuery.of(context).size.width / 2) - 100,
       width: 200,
       child: AnimatedOpacity(
@@ -18,9 +18,9 @@ class HelpSetPlayerOrder extends StatelessWidget {
           onTap: () {
             onTap(true);
           },
-          child: Container(
+          child: show ? Container(
             padding: EdgeInsets.all(10),
-            height: 120,
+            height: 160,
             decoration: BoxDecoration(
                 shape: BoxShape.rectangle,
                 color: Colors.deepPurple[800],
@@ -29,12 +29,12 @@ class HelpSetPlayerOrder extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text("Long press names of players to set order of serve",
+                Text("Long press names of players to set order of serve\n\nTab the box to hide",
                     style: TextStyle(color: Colors.white, fontSize: 20),
                     textAlign: TextAlign.center),
               ],
             ),
-          ),
+          ) : Container(),
         ),
       ),
     );

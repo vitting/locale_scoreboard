@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:locale_scoreboard/helpers/db_helpers.dart';
+import 'package:locale_scoreboard/helpers/db_sql_create.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/scoreboard_board.dart';
 import 'package:locale_scoreboard/ui/scoreboard/create/scoreboard_create_main.dart';
+import 'package:locale_scoreboard/ui/scoreboard/helpers/match_data.dart';
+import 'package:locale_scoreboard/ui/scoreboard/helpers/score_data.dart';
+
+enum BottomMenuResult { delete, edit }
+enum DeleteDialogResult {
+  yes,
+  no
+}
 
 class Scoreboard extends StatefulWidget {
   static final routeName = "/scoreboard";
@@ -11,16 +22,130 @@ class _ScoreboardState extends State<Scoreboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text("Matches"),
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pushNamed(ScoreboardCreate.routeName);
+        backgroundColor: Colors.deepOrange,
+        onPressed: () async {
+          MatchData match = await Navigator.of(context).push(MaterialPageRoute(
+              builder: (BuildContext context) =>
+                  ScoreboardCreate(match: null)));
         },
         child: Icon(Icons.add),
       ),
       body: Container(
-        child: Text("Scoreboard"),
-      ),
+          child: FutureBuilder(
+        future: DbHelpers.query(DbSql.tableMatches),
+        builder: (BuildContext context,
+            AsyncSnapshot<List<Map<String, dynamic>>> matches) {
+          if (!matches.hasData) return Container();
+          if (matches.hasData && matches.data.length == 0)
+            return Container(child: Text("No matches"));
+          if (matches.hasData && matches.data.length != 0) {
+            List<MatchData> m =
+                matches.data.map<MatchData>((Map<String, dynamic> item) {
+              return MatchData.fromMap(item);
+            }).toList();
+            return ListView.builder(
+              itemCount: m.length,
+              itemBuilder: (BuildContext context, int position) {
+                MatchData match = m[position];
+                return Card(
+                  child: ListTile(
+                    onLongPress: () async {
+                      BottomMenuResult result = await _showMenu(context);
+
+                      if (result != null) {
+                        switch (result) {
+                          case BottomMenuResult.edit:
+                            _editMatch(context, match);
+                            break;
+                          case BottomMenuResult.delete:
+                            DeleteDialogResult dialogResult = await _deleteMatchDialog(context, match);
+                            if (dialogResult != null && dialogResult == DeleteDialogResult.yes) {
+                              int deleteResult = await match.delete();
+                              if (deleteResult != 0) {
+                                setState(() {});
+                              }
+                            }
+                            break;
+                        }
+                      }
+                    },
+                    onTap: () async {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              ScoreboardBoard(
+                                match: match,
+                              )));
+                    },
+                    title: Text(match.title),
+                  ),
+                );
+              },
+            );
+          }
+        },
+      )),
+    );
+  }
+
+  Future<BottomMenuResult> _showMenu(BuildContext context) {
+    return showModalBottomSheet<BottomMenuResult>(
+        context: context,
+        builder: (BuildContext modalContext) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.edit),
+                title: Text("Edit Match"),
+                onTap: () {
+                  Navigator.of(modalContext).pop(BottomMenuResult.edit);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.delete),
+                title: Text("Delete Match"),
+                onTap: () {
+                  Navigator.of(modalContext).pop(BottomMenuResult.delete);
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  void _editMatch(BuildContext context, MatchData match) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (BuildContext context) => ScoreboardCreate(
+        match: match,
+      )
+    ));
+  }
+
+  Future<DeleteDialogResult> _deleteMatchDialog(BuildContext context, MatchData match) {
+    return showDialog<DeleteDialogResult>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: Text("Delete"),
+        content: Text("Do you want to Delete the Match?\n\n${match.title}"),
+        actions: <Widget>[
+          FlatButton(
+            child: Text("No"),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(DeleteDialogResult.no);
+            },
+          ),
+          FlatButton(
+            child: Text("Yes"),
+            onPressed: () {
+              Navigator.of(dialogContext).pop(DeleteDialogResult.yes);
+            },
+          )
+        ],
+      )
     );
   }
 }
