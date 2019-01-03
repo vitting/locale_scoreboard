@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/set_score_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/helpers/set_data.dart';
 
 class SetScoreContainer extends StatelessWidget {
+  final List<SetData> sets;
+
+  const SetScoreContainer({Key key, this.sets}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(

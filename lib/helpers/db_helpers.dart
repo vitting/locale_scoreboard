@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 
 final String dbName = "board.db";
-final int dbVersion = 5;
+final int dbVersion = 2;
 
 class DbHelpers {
   static final _lock = new Lock();
@@ -30,6 +30,10 @@ class DbHelpers {
           _db = await openDatabase(path, version: dbVersion,
               onConfigure: (Database db) async {
             try {
+              await db.execute("${DbSql.createMatches}");
+              await db.execute("${DbSql.createScores}");
+              await db.execute("${DbSql.createSets}");
+              await db.execute("${DbSql.createStatistics}");
             } catch (error) {
               print("DB ONCONFIGURE ERROR: $error");
             }
@@ -37,16 +41,20 @@ class DbHelpers {
           }, onCreate: (Database db, int version) async {
             try {
               print("ONCREATE CREATION TABLES");
-              await db.execute(
-                  "${DbSql.createMatches}${DbSql.createScores}${DbSql.createSets}${DbSql.createStatistics}");
+              await db.execute("${DbSql.createMatches}");
+              await db.execute("${DbSql.createScores}");
+              await db.execute("${DbSql.createSets}");
+              await db.execute("${DbSql.createStatistics}");
             } catch (error) {
               print("DB ONCREATE ERROR: $error");
             }
           }, onUpgrade: (Database db, int oldVersion, int newVersion) async {
             try {
               print("ONUPGRADE CREATION TABLES");
-              await db.execute(
-                  "${DbSql.createMatches}${DbSql.createScores}${DbSql.createSets}${DbSql.createStatistics}");
+              await db.execute("${DbSql.createMatches}");
+              await db.execute("${DbSql.createScores}");
+              await db.execute("${DbSql.createSets}");
+              await db.execute("${DbSql.createStatistics}");
             } catch (error) {
               print("DB ONUPGRADE ERROR: $error");
             }
@@ -54,12 +62,27 @@ class DbHelpers {
             try {
               print("ONOPEN");
               // await db.execute(DbSql.createScores);
+              
+              // await db.execute("${DbSql.dropMatches}");
+              // await db.execute("${DbSql.dropScores}");
+              // await db.execute("${DbSql.dropSets}");
+              // await db.execute("${DbSql.dropStatistics}");
+
+              // print(await db.rawQuery("PRAGMA table_info(matches)"));
               // print(await db.rawQuery("PRAGMA table_info(scores)"));
-              // await db.execute("${DbSql.dropMatches}${DbSql.dropScores}${DbSql.dropSets}${DbSql.dropStatistics}");
               // await db.execute("${DbSql.createMatches}${DbSql.createScores}${DbSql.createSets}${DbSql.createStatistics}");
             } catch (error) {
               print("DB ONOPEN ERROR: $error");
             }
+          }, onDowngrade: (Database db, int oldVersion, int newVersion) {
+            print("ONDOWNGRADE");
+            try {
+              File f = File.fromUri(Uri.file(path));
+              f.delete();  
+            } catch (e) {
+              print("FILE ERROR: $e");
+            }
+            
           });
         }
       });
@@ -105,14 +128,39 @@ class DbHelpers {
         whereArgs: whereArgs);
   }
 
-  static Future<int> updateMatchElapsed(int matchDuration, String id) async {
+  static Future<int> updateSetPointsFirstTo(int points, String id) async {
     Database dbCon = await db;
-    return dbCon.rawUpdate("UPDATE scores SET matchDuration = ? WHERE id = ?", [matchDuration, id]);
+    return dbCon.rawUpdate("UPDATE scores SET setPointsFirstTo = ? WHERE id = ?", [points, id]);
   }
 
-  static Future<int> updateStartTeam(int team, String id) async {
+  static Future<int> updateSetStart(int setStart, String id) async {
     Database dbCon = await db;
-    return dbCon.rawUpdate("UPDATE scores SET startTeam = ? WHERE id = ?", [team, id]);
+    return dbCon.rawUpdate("UPDATE scores SET setStart = ? WHERE id = ?", [setStart, id]);
+  }
+
+  static Future<int> updateSetEnd(int setEnd, String id) async {
+    Database dbCon = await db;
+    return dbCon.rawUpdate("UPDATE scores SET setEnd = ? WHERE id = ?", [setEnd, id]);
+  }
+
+  static Future<int> updateElapsedTime(int elapsedTime, String id) async {
+    Database dbCon = await db;
+    return dbCon.rawUpdate("UPDATE scores SET elapsedTime = ? WHERE id = ?", [elapsedTime, id]);
+  }
+
+  static Future<int> updateStartingWithTheServe(int team, String id) async {
+    Database dbCon = await db;
+    return dbCon.rawUpdate("UPDATE scores SET startingWithTheServe = ? WHERE id = ?", [team, id]);
+  }
+
+  static Future<int> updateWinnerOfDraw(int team, String id) async {
+    Database dbCon = await db;
+    return dbCon.rawUpdate("UPDATE scores SET winnerOfDraw = ? WHERE id = ?", [team, id]);
+  }
+
+  static Future<int> updateOrderOfServe(int team, int player1, int player2, String id) async {
+    Database dbCon = await db;
+    return dbCon.rawUpdate("UPDATE scores SET orderOfServePlayer1Team$team = ?, orderOfServePlayer2Team$team = ? WHERE id = ?", [player1, player2, id]);
   }
 
   static Future<int> updateActiveTeam(int team, String id) async {
@@ -120,24 +168,19 @@ class DbHelpers {
     return dbCon.rawUpdate("UPDATE scores SET activeTeam = ? WHERE id = ?", [team, id]);
   }
 
-  static Future<int> updateSets(int setTeam1, int setTeam2, int matchDuration, String id) async {
+  static Future<int> updateSets(int setTeam1, int setTeam2, int elapsedTime, String id) async {
     Database dbCon = await db;
-    return dbCon.rawUpdate("UPDATE scores SET setTeam1 = ?, setTeam2 = ?, matchDuration = ? WHERE id = ?", [setTeam1, setTeam2, matchDuration, id]);
+    return dbCon.rawUpdate("UPDATE scores SET setTeam1 = ?, setTeam2 = ?, elapsedTime = ? WHERE id = ?", [setTeam1, setTeam2, elapsedTime, id]);
   }
 
-  static Future<int> updatePoints(int pointsTeam1, int pointsTeam2, int matchDuration, String id) async {
+  static Future<int> updatePoints(int pointsTeam1, int pointsTeam2, int elapsedTime, String id) async {
     Database dbCon = await db;
-    return dbCon.rawUpdate("UPDATE scores SET pointsTeam1 = ?, pointsTeam2 = ?, matchDuration = ? WHERE id = ?", [pointsTeam1, pointsTeam2, matchDuration, id]);
+    return dbCon.rawUpdate("UPDATE scores SET pointsTeam1 = ?, pointsTeam2 = ?, elapsedTime = ? WHERE id = ?", [pointsTeam1, pointsTeam2, elapsedTime, id]);
   }
 
-  static Future<int> updateTimeouts(int timeoutsTeam1, int timeoutsTeam2, int matchDuration, String id) async {
+  static Future<int> updateTimeouts(int timeoutsTeam1, int timeoutsTeam2, int elapsedTime, String id) async {
     Database dbCon = await db;
-    return dbCon.rawUpdate("UPDATE scores SET timeoutsTeam1 = ?, timeoutsTeam2 = ?, matchDuration = ? WHERE id = ?", [timeoutsTeam1, timeoutsTeam2, matchDuration, id]);
-  }
-
-  static Future<int> updateMatchDuration(int matchDuration, String id) async {
-    Database dbCon = await db;
-    return dbCon.rawUpdate("UPDATE scores SET matchDuration = ? WHERE id = ?", [matchDuration, id]);
+    return dbCon.rawUpdate("UPDATE scores SET timeoutsTeam1 = ?, timeoutsTeam2 = ?, elapsedTime = ? WHERE id = ?", [timeoutsTeam1, timeoutsTeam2, elapsedTime, id]);
   }
 
   static Future<int> updateMatchStartedAt(int matchStartedAt, bool active, String id) async {

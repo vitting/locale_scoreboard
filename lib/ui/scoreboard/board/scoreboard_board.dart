@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'package:locale_scoreboard/helpers/db_helpers.dart';
+import 'package:locale_scoreboard/helpers/db_sql_create.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_number_of_point_for_set.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/match_data.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/score_data.dart';
+import 'package:locale_scoreboard/ui/scoreboard/helpers/set_data.dart';
 import 'package:vibrate/vibrate.dart';
 import 'package:flutter/material.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/help_set_player_order_widget.dart';
@@ -30,6 +34,12 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     with TickerProviderStateMixin {
   StreamController<TimerValues> _timeController =
       StreamController<TimerValues>.broadcast();
+  StreamController<TeamServe> _serveOrderTeam1Controller =
+      StreamController<TeamServe>.broadcast();
+  StreamController<TeamServe> _serveOrderTeam2Controller =
+      StreamController<TeamServe>.broadcast();
+  StreamController<int> _numberOfPointsInSetController =
+  StreamController<int>.broadcast();
   Color _teamAColor = Colors.white;
   Color _teamBColor = Colors.white;
   Color _teamAColorControls = Colors.white;
@@ -45,6 +55,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   bool _teamBWinnerOfServe = false;
   int _teamASets = 0;
   int _teamBSets = 0;
+  int _setNumber = 0;
   String _teamAPlayer1 = "Christian Vitting Nicolaisen";
   String _teamAPlayer2 = "Irene Hansen";
   String _teamBPlayer1 = "Martin Jensen";
@@ -53,10 +64,12 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   int _teamBPoints = 0;
   int _teamATimeouts = 0;
   int _teamBTimeouts = 0;
+  int _pointsInSet = 21;
   int _controlStep = 0;
   bool _showBox1 = false;
   int _elapsedTime = 0;
   ScoreData _scoreData;
+  CrossFadeState _mainControlsDisplay = CrossFadeState.showFirst;
   CrossFadeState _mainDisplay = CrossFadeState.showFirst;
 
   @override
@@ -78,22 +91,45 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         _teamBPoints = _scoreData.pointsTeam2;
         _teamASets = _scoreData.setTeam1;
         _teamBSets = _scoreData.setTeam2;
+        _setNumber = _scoreData.setTeam1 + _scoreData.setTeam2;
         _teamATimeouts = _scoreData.timeoutsTeam1;
         _teamBTimeouts = _scoreData.timeoutsTeam2;
-        _elapsedTime = _scoreData.matchDuration.inSeconds;
+        _elapsedTime = _scoreData.elapsedTime.inSeconds;
+        
       });
 
+      _numberOfPointsInSetController.add(_scoreData.setPointsFirstTo);
+
+      if (_scoreData.orderOfServePlayer1Team1 != 0 &&
+          _scoreData.orderOfServePlayer2Team1 != 0) {
+        _serveOrderTeam1Controller.add(TeamServe(
+            _scoreData.orderOfServePlayer1Team1,
+            _scoreData.orderOfServePlayer2Team1));
+      }
+      if (_scoreData.orderOfServePlayer1Team2 != 0 &&
+          _scoreData.orderOfServePlayer2Team2 != 0) {
+        _serveOrderTeam2Controller.add(TeamServe(
+            _scoreData.orderOfServePlayer1Team2,
+            _scoreData.orderOfServePlayer2Team2));
+      }
+
+      if (_scoreData.winnerOfDraw != 0) {
+        _setWinnerOfDraw(_scoreData.winnerOfDraw);
+      }
+
+      if (_scoreData.startingWithTheServe != 0) {
+        _setStartWithServe(_scoreData.startingWithTheServe);
+      }
+
       if (widget.match.active) {
-        _setWinnerOfDraw(_scoreData.startTeam);
-        _setActiveTeam(_scoreData.activeTeam);
-        _showControls();
+        _showControls(true);
       }
     }
   }
 
   @override
   void dispose() {
-    _scoreData.updateMatchElapsed(_elapsedTime);
+    _scoreData.updateElapsedTime(_elapsedTime);
     _timeController.close();
     super.dispose();
   }
@@ -101,7 +137,12 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+      body: _main()
+    );
+  }
+
+  Widget _main() {
+    return Stack(
         children: <Widget>[
           Container(
             decoration: BoxDecoration(
@@ -118,6 +159,23 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
             )),
             child: ListView(
               children: <Widget>[
+                RaisedButton(
+                  child: Text("TEST"),
+                  onPressed: () async {
+                    List<Map<String, dynamic>> list = await DbHelpers.query(DbSql.tableScores, where: "matchId = ?", whereArgs: [widget.match.id]);
+                    debugPrint(list.toString());
+                    // _showControls(false);
+                    // setState(() {
+                    //   if (_mainDisplay == CrossFadeState.showFirst) {
+                    //     _mainDisplay = CrossFadeState.showSecond;
+                    //   } else {
+                    //     _mainDisplay = CrossFadeState.showFirst;
+                    //   }
+                    // });
+                    // List<SetData> sets = await widget.match.getSets();
+                    // print(sets);
+                  },
+                ),
                 Container(
                   padding: EdgeInsets.only(top: 15.0, bottom: 20.0),
                   child: Column(
@@ -131,25 +189,11 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                             winnerOfServe: _teamAWinnerOfServe,
                             team: 1,
                           ),
-                          InkWell(
-                            onLongPress: () {
-                              _timeController.add(
-                                  TimerValues(TimerState.cancel, _elapsedTime));
+                          SetTime(
+                            timeStream: _timeController.stream,
+                            onTimeChange: (int time) {
+                              _elapsedTime = time;
                             },
-                            onDoubleTap: () {
-                              _timeController.add(
-                                  TimerValues(TimerState.reset, _elapsedTime));
-                            },
-                            onTap: () {
-                              _timeController.add(
-                                  TimerValues(TimerState.start, _elapsedTime));
-                            },
-                            child: SetTime(
-                              timeStream: _timeController.stream,
-                              onTimeChange: (int time) {
-                                _elapsedTime = time;
-                              },
-                            ),
                           ),
                           TeamTitle(
                             color: _teamBColor,
@@ -166,35 +210,51 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                       Row(
                         children: <Widget>[
                           TeamPlayerNames(
+                            teamOrderOfServeStream:
+                                _serveOrderTeam1Controller.stream,
                             player1Name: _teamAPlayer1,
                             player2Name: _teamAPlayer2,
                             teamColor: _teamAColor,
                             teamActiveColor: _teamAColorActive,
                             playerActiveColor: _teamAColorDefault,
                             playerActive: 0,
+                            onSetServeOrder: (teamServe) {
+                              if (teamServe != null) {
+                                _saveServeOrder(1, teamServe);
+                              }
+                            },
                           ),
                           TeamPlayerNames(
+                            teamOrderOfServeStream:
+                                _serveOrderTeam2Controller.stream,
                             player1Name: _teamBPlayer1,
                             player2Name: _teamBPlayer2,
                             teamColor: _teamBColor,
                             teamActiveColor: _teamBColorActive,
                             playerActiveColor: _teamBColorDefault,
                             playerActive: 0,
+                            onSetServeOrder: (teamServe) {
+                              if (teamServe != null) {
+                                _saveServeOrder(2, teamServe);
+                              }
+                            },
                           )
                         ],
                       ),
-                      Padding(padding: EdgeInsets.symmetric(vertical: 10.0)),
-                      _results(),
+                      Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
+                      AnimatedCrossFade(
+                        crossFadeState: _mainDisplay,
+                        duration: Duration(milliseconds: 400),
+                        firstChild: Container(),
+                        secondChild: _results(),
+                      )
                     ],
                   ),
                 ),
-                Divider(
-                  color: Colors.white,
-                ),
                 AnimatedCrossFade(
                   sizeCurve: Curves.easeIn,
-                  duration: Duration(milliseconds: 500),
-                  crossFadeState: _mainDisplay,
+                  duration: Duration(milliseconds: 400),
+                  crossFadeState: _mainControlsDisplay,
                   firstChild: _controlStep == 0 ? _setupSet() : Container(),
                   secondChild: _controlStep == 1 ? _controls() : Container(),
                 ),
@@ -210,21 +270,32 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
             },
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _setupSet() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10),
+      // padding: EdgeInsets.symmetric(horizontal: 10),
       child: Column(
         children: <Widget>[
+          SetNumberOfPointsForSet(
+            pointsInSetStream: _numberOfPointsInSetController.stream,
+            onTapPoints: (int points) {
+              _scoreData.updateSetPointsFirstTo(points);
+            },
+          ),
+          SizedBox(
+            height: 20,
+          ),
           SetWinnerOfDraw(
             onTapTeam: (int team) {
               _setWinnerOfDraw(team);
             },
             teamAButtonColor: _teamAColorDefault,
             teamBButtonColor: _teamBColorDefault,
+          ),
+          SizedBox(
+            height: 20,
           ),
           SetOrderOfServe(
             onTap: (_) {
@@ -233,6 +304,9 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
               });
             },
           ),
+          SizedBox(
+            height: 20,
+          ),
           SetStartWithServe(
             onTapTeam: (int team) {
               _setStartWithServe(team);
@@ -240,10 +314,15 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
             teamAButtonColor: _teamAColorDefault,
             teamBButtonColor: _teamBColorDefault,
           ),
+          SizedBox(
+            height: 20,
+          ),
           StartMatch(
-            onTap: (_) {
-              _showControls();
-              widget.match.updateMatchStarted();
+            onTap: (_) async {
+              DateTime time = DateTime.now();
+              _showControls(true);
+              await widget.match.updateMatchStarted(time);
+              await _scoreData.updateSetStart(time);
             },
           )
         ],
@@ -318,13 +397,19 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
           Row(
             children: <Widget>[
               TeamPoints(
-                  activeColor: _teamAColorActive,
-                  color: _teamAColor,
-                  points: _teamAPoints),
+                team: 1,
+                activeColor: _teamAColorActive,
+                color: _teamAColor,
+                points: _teamAPoints,
+                onLongPress: _pointsOnLongPress,
+              ),
               TeamPoints(
-                  activeColor: _teamBColorActive,
-                  color: _teamBColor,
-                  points: _teamBPoints)
+                team: 2,
+                activeColor: _teamBColorActive,
+                color: _teamBColor,
+                points: _teamBPoints,
+                onLongPress: _pointsOnLongPress,
+              )
             ],
           ),
           Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
@@ -335,7 +420,10 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
               teamBColorActive: _teamBColorActive,
               teamATimeouts: _teamATimeouts,
               teamBTimeouts: _teamBTimeouts),
-          SetScoreContainer()
+          SetScoreContainer(),
+          Divider(
+            color: Colors.white,
+          ),
         ],
       ),
     );
@@ -433,7 +521,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
       if (MainInherited.of(context).canVibrate) {
         Vibrate.feedback(FeedbackType.success);
       }
-      String team = teamWon == Team.a ? "A" : "B";
+      int team = teamWon == Team.a ? 1 : 2;
       _showSetWon(context, team);
     }
 
@@ -488,44 +576,198 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         barrierDismissible: false,
         builder: (BuildContext dialogContext) {
           return AlertDialog(
-            title: Text("Technical Timeout"),
-            content: Text("Teams has Technical Timeout"),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("Ok"),
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(true);
-                },
-              )
-            ],
-          );
+              title: Text("Technical Timeout"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text("Teams has Technical Timeout!"),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      if (MainInherited.of(context).canVibrate) {
+                        Vibrate.feedback(FeedbackType.medium);
+                      }
+                      Navigator.of(dialogContext).pop(true);
+                    },
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      child: Center(
+                          child: Text("Ok",
+                              style: TextStyle(color: Colors.white))),
+                      decoration: BoxDecoration(
+                          color: Colors.green[900],
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black, width: 1.0)),
+                    ),
+                  )
+                ],
+              ));
         });
   }
 
-  void _showSetWon(BuildContext context, String team) async {
+  void _showMatchWon(BuildContext context, int team) async {
+    bool result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) {
+          return AlertDialog(
+            title: Text("Match won"),
+            content: Container(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text("Team ${team == 1 ? "A" : "B"}",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text(" "),
+                        Text("won the match?")
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      InkWell(
+                        onTap: () {
+                          if (MainInherited.of(context).canVibrate) {
+                            Vibrate.feedback(FeedbackType.medium);
+                          }
+                          Navigator.of(dialogContext).pop(false);
+                        },
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          child: Center(
+                              child: Text("NO",
+                                  style: TextStyle(color: Colors.white))),
+                          decoration: BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: Colors.black, width: 1.0)),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          if (MainInherited.of(context).canVibrate) {
+                            Vibrate.feedback(FeedbackType.medium);
+                          }
+                          Navigator.of(dialogContext).pop(true);
+                        },
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          child: Center(
+                              child: Text("YES",
+                                  style: TextStyle(color: Colors.white))),
+                          decoration: BoxDecoration(
+                              color: Colors.green[900],
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: Colors.black, width: 1.0)),
+                        ),
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
+          );
+        });
+
+    if (result != null && result == true) {}
+  }
+
+  void _showSetWon(BuildContext context, int team) async {
     bool result = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext dialogContext) {
           return AlertDialog(
             title: Text("Set won"),
-            content: Text("Team $team won the set?"),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("No"),
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(false);
-                },
+            content: Container(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text("Team ${team == 1 ? "A" : "B"}",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text(" "),
+                        Text("won the set?")
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      InkWell(
+                        onTap: () {
+                          if (MainInherited.of(context).canVibrate) {
+                            Vibrate.feedback(FeedbackType.medium);
+                          }
+                          Navigator.of(dialogContext).pop(false);
+                        },
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          child: Center(
+                              child: Text("NO",
+                                  style: TextStyle(color: Colors.white))),
+                          decoration: BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: Colors.black, width: 1.0)),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          if (MainInherited.of(context).canVibrate) {
+                            Vibrate.feedback(FeedbackType.medium);
+                          }
+                          Navigator.of(dialogContext).pop(true);
+                        },
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          child: Center(
+                              child: Text("YES",
+                                  style: TextStyle(color: Colors.white))),
+                          decoration: BoxDecoration(
+                              color: Colors.green[900],
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: Colors.black, width: 1.0)),
+                        ),
+                      )
+                    ],
+                  )
+                ],
               ),
-              FlatButton(
-                child: Text("Yes"),
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(true);
-                },
-              )
-            ],
+            ),
           );
         });
+
+    if (result != null && result == true) {}
+  }
+
+  void _setWon() {
+    // _scoreData.updateSetEnd()
+    //TODO: Save set
+    // TODO: Reset score
+    //TODO: Reset Ui
+    //TODO: Show Setup Controls
   }
 
   void _showSideChange(BuildContext context) async {
@@ -534,71 +776,153 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         barrierDismissible: false,
         builder: (BuildContext dialogContext) {
           return AlertDialog(
-            title: Text("Side Change"),
-            content: Text("Teams have to change sides"),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("Ok"),
-                onPressed: () {
-                  Navigator.of(dialogContext).pop(true);
-                },
-              )
-            ],
-          );
+              title: Text("Side Change"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text("Teams have to change sides!"),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      if (MainInherited.of(context).canVibrate) {
+                        Vibrate.feedback(FeedbackType.medium);
+                      }
+                      Navigator.of(dialogContext).pop(true);
+                    },
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      child: Center(
+                          child: Text("Ok",
+                              style: TextStyle(color: Colors.white))),
+                      decoration: BoxDecoration(
+                          color: Colors.green[900],
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black, width: 1.0)),
+                    ),
+                  )
+                ],
+              ));
         });
   }
 
   void _setActiveTeam(int team) {
     _scoreData.updateActiveTeam(team);
 
-    if (team == 1) {
-      _teamAColorActive = _teamActiveColor;
-      _teamBColorActive = _teamBColorDefault;
-    } else {
-      _teamAColorActive = _teamAColorDefault;
-      _teamBColorActive = _teamActiveColor;
+    switch (team) {
+      case 0:
+        _teamAColorActive = _teamAColorDefault;
+        _teamBColorActive = _teamBColorDefault;
+        break;
+      case 1:
+        _teamAColorActive = _teamActiveColor;
+        _teamBColorActive = _teamBColorDefault;
+        break;
+      case 2:
+        _teamAColorActive = _teamAColorDefault;
+        _teamBColorActive = _teamActiveColor;
+        break;
     }
   }
 
   void _setWinnerOfDraw(int team) {
-    _scoreData.updateStartTeam(team);
+    _scoreData.updateWinnerOfDraw(team);
 
-    if (team == 1) {
-      setState(() {
-        _teamAWinnerOfServe = true;
-        _teamBWinnerOfServe = false;
-      });
-    } else if (team == 2) {
-      setState(() {
-        _teamBWinnerOfServe = true;
-        _teamAWinnerOfServe = false;
-      });
-    }
+    setState(() {
+      switch (team) {
+        case 0:
+          _teamAWinnerOfServe = false;
+          _teamBWinnerOfServe = false;
+          break;
+        case 1:
+          _teamAWinnerOfServe = true;
+          _teamBWinnerOfServe = false;
+          break;
+        case 2:
+          _teamBWinnerOfServe = true;
+          _teamAWinnerOfServe = false;
+          break;
+      }
+    });
   }
 
   void _setStartWithServe(int team) {
-    _scoreData.updateActiveTeam(team);
+    _scoreData.updateStartingWithTheServe(team);
 
-    if (team == 1) {
-      setState(() {
-        _teamAActive = true;
-        _teamBActive = false;
-        _setActiveTeam(1);
-      });
-    } else if (team == 2) {
-      setState(() {
-        _teamAActive = false;
-        _teamBActive = true;
-        _setActiveTeam(2);
-      });
+    setState(() {
+      switch (team) {
+        case 0:
+          _teamAActive = false;
+          _teamBActive = false;
+          break;
+        case 1:
+          _teamAActive = true;
+          _teamBActive = false;
+          break;
+        case 2:
+          _teamAActive = false;
+          _teamBActive = true;
+          break;
+      }
+
+      _setActiveTeam(team);
+    });
+  }
+
+  void _showControls(bool show) {
+    setState(() {
+      if (show) {
+        _mainControlsDisplay = CrossFadeState.showSecond;
+        _mainDisplay = CrossFadeState.showSecond;
+        _controlStep = 1;
+        _timeController.add(TimerValues(TimerState.start, _elapsedTime));
+      } else {
+        _mainControlsDisplay = CrossFadeState.showFirst;
+        _mainDisplay = CrossFadeState.showFirst;
+        _controlStep = 0;
+      }
+    });
+  }
+
+  void _pointsOnLongPress(int team) async {
+    int result = await showModalBottomSheet<int>(
+        context: context,
+        builder: (BuildContext bottomModalContext) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                title: Text("Set Team ${team == 1 ? "A" : "B"} as set winner"),
+                onTap: () {
+                  Navigator.of(bottomModalContext).pop(1);
+                },
+              ),
+              ListTile(
+                title:
+                    Text("Set Team ${team == 1 ? "A" : "B"} as match winner"),
+                onTap: () {
+                  Navigator.of(bottomModalContext).pop(2);
+                },
+              )
+            ],
+          );
+        });
+
+    if (result != null) {
+      switch (result) {
+        case 1:
+          _showSetWon(context, team);
+          break;
+        case 2:
+          _showMatchWon(context, team);
+          break;
+      }
     }
   }
 
-  void _showControls() {
-    setState(() {
-      _mainDisplay = CrossFadeState.showSecond;
-      _controlStep = 1;
-      _timeController.add(TimerValues(TimerState.start, _elapsedTime));
-    });
+  void _saveServeOrder(int team, TeamServe serve) {
+    _scoreData.updateOrderOfServe(team, serve);
   }
 }

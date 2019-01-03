@@ -1,3 +1,8 @@
+import 'package:locale_scoreboard/helpers/db_helpers.dart';
+import 'package:locale_scoreboard/helpers/db_sql_create.dart';
+import 'package:locale_scoreboard/helpers/system_helpers.dart';
+import 'package:locale_scoreboard/ui/scoreboard/helpers/score_data.dart';
+
 class SetData {
   String id;
   String matchId;
@@ -27,6 +32,11 @@ class SetData {
       this.setStart,
       this.setEnd,
       this.winnerTeam});
+
+  Future<int> save() {
+    id = SystemHelpers.generateUuid();
+    return DbHelpers.insert(DbSql.tableSets, this.toMap());
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -58,8 +68,25 @@ class SetData {
         setTeam2: item["setTeam2"],
         timeoutsTeam1: item["timeoutsTeam1"],
         timeoutsTeam2: item["timeoutsTeam2"],
-        setStart: item["setStart"],
-        setEnd: item["setEnd"],
+        setStart: DateTime.fromMillisecondsSinceEpoch(item["setStart"]),
+        setEnd: DateTime.fromMillisecondsSinceEpoch(item["setEnd"]),
         winnerTeam: item["winnerTeam"]);
+  }
+
+  static SetData fromScoreData(ScoreData scoreData, int winnerTeam) {
+    return SetData(
+      matchId: scoreData.matchId,
+      pointsTeam1: scoreData.pointsTeam1,
+      pointsTeam2: scoreData.pointsTeam2,
+      setTeam1: scoreData.setTeam1,
+      setTeam2: scoreData.setTeam2,
+      timeoutsTeam1: scoreData.timeoutsTeam1,
+      timeoutsTeam2: scoreData.timeoutsTeam2,
+      setStart: scoreData.setStart,
+      setEnd: scoreData.setEnd,
+      setNumber: scoreData.setTeam1 + scoreData.setTeam2,
+      startTeam: scoreData.startingWithTheServe,
+      winnerTeam: winnerTeam
+    );
   }
 }

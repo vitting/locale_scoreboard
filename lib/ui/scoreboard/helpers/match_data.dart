@@ -2,6 +2,7 @@ import 'package:locale_scoreboard/helpers/db_helpers.dart';
 import 'package:locale_scoreboard/helpers/db_sql_create.dart';
 import 'package:locale_scoreboard/helpers/system_helpers.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/score_data.dart';
+import 'package:locale_scoreboard/ui/scoreboard/helpers/set_data.dart';
 
 class MatchData {
   String id;
@@ -27,16 +28,28 @@ class MatchData {
       this.namePlayer2Team2,
       this.active});
 
-  Future<int> updateMatchStarted() {
-    matchStartedAt = DateTime.now();
+  Future<int> updateMatchStarted(DateTime time) {
+    matchStartedAt = time;
     active = true;
     return DbHelpers.updateMatchStartedAt(matchStartedAt.millisecondsSinceEpoch, active, id);  
   }
 
-  Future<int> updateMatchEnded() {
-    matchEndedAt = DateTime.now();
+  Future<int> updateMatchEnded(DateTime time) {
+    matchEndedAt = time;
     active = false;
     return DbHelpers.updateMatchEndedAt(matchEndedAt.millisecondsSinceEpoch, active, id);  
+  }
+
+  Future<List<SetData>> getSets() async {
+    List<SetData> setsData = [];
+    List<Map<String, dynamic>> sets = await DbHelpers.query(DbSql.tableSets, where: "matchId = ?", whereArgs: [this.id]);
+    if (sets.length != 0) {
+      setsData = sets.map<SetData>((Map<String, dynamic> s) {
+        return SetData.fromMap(s);
+      }).toList();
+    }
+    
+    return setsData;
   }
 
   Future<ScoreData> getScore() async {
@@ -65,7 +78,7 @@ class MatchData {
         "$namePlayer1Team1, $namePlayer2Team1 vs. $namePlayer1Team2, $namePlayer2Team2";
 
     ScoreData score =
-        ScoreData(matchId: id, matchDuration: Duration(seconds: 0));
+        ScoreData(matchId: id, elapsedTime: Duration(seconds: 0));
     await score.initScores();
     return DbHelpers.insert(DbSql.tableMatches, this.toMap());
   }

@@ -1,67 +1,117 @@
 import 'package:locale_scoreboard/helpers/db_helpers.dart';
 import 'package:locale_scoreboard/helpers/db_sql_create.dart';
 import 'package:locale_scoreboard/helpers/system_helpers.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/team_player_names_widget.dart';
 import 'package:meta/meta.dart';
 
 class ScoreData {
   String id;
   String matchId;
-  Duration matchDuration;
+  Duration elapsedTime;
+  DateTime setStart;
+  DateTime setEnd;
+  int winnerOfDraw;
+  int startingWithTheServe;
+  int orderOfServePlayer1Team1;
+  int orderOfServePlayer2Team1;
+  int orderOfServePlayer1Team2;
+  int orderOfServePlayer2Team2;
   int setTeam1;
   int setTeam2;
+  int setPointsFirstTo;
   int pointsTeam1;
   int pointsTeam2;
   int timeoutsTeam1;
   int timeoutsTeam2;
-  int startTeam;
   int activeTeam;
 
   ScoreData(
       {this.id,
       @required this.matchId,
-      @required this.matchDuration,
+      @required this.elapsedTime,
+      this.setStart,
+      this.setEnd,
+      this.winnerOfDraw = 0,
+      this.startingWithTheServe = 0,
+      this.orderOfServePlayer1Team1 = 0,
+      this.orderOfServePlayer2Team1 = 0,
+      this.orderOfServePlayer1Team2 = 0,
+      this.orderOfServePlayer2Team2 = 0,
       this.setTeam1 = 0,
       this.setTeam2 = 0,
       this.pointsTeam1 = 0,
+      this.setPointsFirstTo = 0,
       this.pointsTeam2 = 0,
       this.timeoutsTeam1 = 0,
       this.timeoutsTeam2 = 0,
-      this.startTeam = 0,
       this.activeTeam = 0});
 
   // save -> save statistic
   // save set
   // delete set
-  
-  Future<int> updateMatchElapsed(int elapsedTime) {
-    matchDuration = Duration(seconds: elapsedTime);
-    return DbHelpers.updateMatchDuration(elapsedTime, id);
+
+  Future<int> updateSetPointsFirstTo(int points) {
+    setPointsFirstTo = points;
+    return DbHelpers.updateSetPointsFirstTo(points, id);
+  }
+
+  Future<int> updateSetStart(DateTime time) {
+    setStart = time;
+    return DbHelpers.updateSetStart(setStart.millisecondsSinceEpoch, id);
+  }
+
+  Future<int> updateSetEnd(DateTime time) {
+    setEnd = time;
+    return DbHelpers.updateSetEnd(setEnd.millisecondsSinceEpoch, id);
+  }
+
+  Future<int> updateStartingWithTheServe(int team) {
+    startingWithTheServe = team;
+    return DbHelpers.updateStartingWithTheServe(team, id);
+  }
+
+  Future<int> updateWinnerOfDraw(int team) {
+    winnerOfDraw = team;
+    return DbHelpers.updateWinnerOfDraw(team, id);
+  }
+
+  Future<int> updateOrderOfServe(int team, TeamServe serve) {
+    if (team == 1) {
+      orderOfServePlayer1Team1 = serve.first;
+      orderOfServePlayer2Team1 = serve.second;
+    } else if (team == 2) {
+      orderOfServePlayer1Team2 = serve.first;
+      orderOfServePlayer2Team2 = serve.second;
+    }
+
+    return DbHelpers.updateOrderOfServe(team, serve.first, serve.second, id);
+  }
+
+  Future<int> updateElapsedTime(int elapsedTime) {
+    this.elapsedTime = Duration(seconds: elapsedTime);
+    return DbHelpers.updateElapsedTime(elapsedTime, id);
   }
 
   Future<int> updateSets(int team1Set, int team2Set, int duration) {
     setTeam1 = team1Set;
     setTeam2 = team2Set;
-    matchDuration = Duration(seconds: duration);
+    this.elapsedTime = Duration(seconds: duration);
     return DbHelpers.updateSets(team1Set, team2Set, duration, id);
   }
 
   Future<int> updatePoints(int team1Points, int team2Points, int duration) {
     pointsTeam1 = team1Points;
     pointsTeam2 = team2Points;
-    matchDuration = Duration(seconds: duration);
+    this.elapsedTime = Duration(seconds: duration);
     return DbHelpers.updatePoints(team1Points, team2Points, duration, id);
   }
 
-  Future<int> updateTimeouts(int team1Timeouts, int team2Timeouts, int duration) {
+  Future<int> updateTimeouts(
+      int team1Timeouts, int team2Timeouts, int duration) {
     timeoutsTeam1 = team1Timeouts;
     timeoutsTeam2 = team2Timeouts;
-    matchDuration = Duration(seconds: duration);
+    this.elapsedTime = Duration(seconds: duration);
     return DbHelpers.updateTimeouts(team1Timeouts, team2Timeouts, duration, id);
-  }
-
-  Future<int> updateStartTeam(int teamWithStart) {
-    startTeam = teamWithStart;
-    return DbHelpers.updateStartTeam(teamWithStart, id);
   }
 
   Future<int> updateActiveTeam(int teamThatActive) {
@@ -73,10 +123,29 @@ class ScoreData {
     int returnValue = 0;
     if (id == null && matchId != null) {
       id = SystemHelpers.generateUuid();
+      setStart = DateTime.now();
+      setEnd = DateTime.now();
       returnValue = await DbHelpers.insert(DbSql.tableScores, this.toMap());
     }
 
     return returnValue;
+  }
+
+  Future<int> resetScore() {
+    setStart = DateTime.now();
+    setEnd = DateTime.now();
+    orderOfServePlayer1Team1 = 0;
+    orderOfServePlayer2Team1 = 0;
+    orderOfServePlayer2Team1 = 0;
+    orderOfServePlayer2Team2 = 0;
+    pointsTeam1 = 0;
+    pointsTeam2 = 0;
+    timeoutsTeam1 = 0;
+    timeoutsTeam2 = 0;
+    activeTeam = 0;
+    setPointsFirstTo = 21;
+
+    return DbHelpers.update(DbSql.tableScores, this.toMap(), "id = ?", [id]);
   }
 
   Future<int> delete() {
@@ -87,12 +156,22 @@ class ScoreData {
     return {
       "id": id,
       "matchId": matchId,
-      "matchDuration": matchDuration.inSeconds,
+      "elapsedTime": elapsedTime.inSeconds,
+      "setStart": setStart.millisecondsSinceEpoch,
+      "setEnd": setEnd.millisecondsSinceEpoch,
+      "winnerOfDraw": winnerOfDraw,
+      "orderOfServePlayer1Team1": orderOfServePlayer1Team1,
+      "orderOfServePlayer2Team1": orderOfServePlayer2Team1,
+      "orderOfServePlayer1Team2": orderOfServePlayer1Team2,
+      "orderOfServePlayer2Team2": orderOfServePlayer2Team2,
+      "startingWithTheServe": startingWithTheServe,
+      "setPointsFirstTo": setPointsFirstTo,
+      "pointsTeam1": pointsTeam1,
+      "pointsTeam2": pointsTeam2,
       "setTeam1": setTeam1,
       "setTeam2": setTeam2,
       "timeoutsTeam1": timeoutsTeam1,
       "timeoutsTeam2": timeoutsTeam2,
-      "startTeam": startTeam,
       "activeTeam": activeTeam,
     };
   }
@@ -101,14 +180,22 @@ class ScoreData {
     return ScoreData(
         id: item["id"],
         matchId: item["matchId"],
-        matchDuration: Duration(seconds: item["matchDuration"]),
+        elapsedTime: Duration(seconds: item["elapsedTime"]),
+        setStart: DateTime.fromMillisecondsSinceEpoch(item["setStart"]),
+        setEnd: DateTime.fromMillisecondsSinceEpoch(item["setEnd"]),
+        winnerOfDraw: item["winnerOfDraw"],
+        orderOfServePlayer1Team1: item["orderOfServePlayer1Team1"],
+        orderOfServePlayer2Team1: item["orderOfServePlayer2Team1"],
+        orderOfServePlayer1Team2: item["orderOfServePlayer1Team2"],
+        orderOfServePlayer2Team2: item["orderOfServePlayer2Team2"],
         setTeam1: item["setTeam1"],
         setTeam2: item["setTeam2"],
+        setPointsFirstTo: item["setPointsFirstTo"],
         pointsTeam1: item["pointsTeam1"],
         pointsTeam2: item["pointsTeam2"],
         timeoutsTeam1: item["timeoutsTeam1"],
         timeoutsTeam2: item["timeoutsTeam2"],
-        startTeam: item["startTeam"],
+        startingWithTheServe: item["startingWithTheServe"],
         activeTeam: item["activeTeam"]);
   }
 }

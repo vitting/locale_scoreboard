@@ -17,6 +17,7 @@ class TeamPlayerNames extends StatefulWidget {
   final Color playerActiveColor;
   final int playerActive;
   final ValueChanged<TeamServe> onSetServeOrder;
+  final Stream<TeamServe> teamOrderOfServeStream;
 
   const TeamPlayerNames(
       {Key key,
@@ -26,7 +27,8 @@ class TeamPlayerNames extends StatefulWidget {
       this.playerActive,
       this.teamColor,
       this.playerActiveColor,
-      this.onSetServeOrder})
+      this.onSetServeOrder,
+      this.teamOrderOfServeStream})
       : super(key: key);
 
   @override
@@ -40,6 +42,22 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
   GlobalKey _keyPlayer2Name = GlobalKey();
   int _player1ServeOrder = 0;
   int _player2ServeOrder = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.teamOrderOfServeStream.listen((TeamServe serve) {
+      if (mounted) {
+        setState(() {
+          if (serve != null) {
+            _player1ServeOrder = serve.first;
+            _player2ServeOrder = serve.second;
+          }
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +79,8 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
             InkWell(
                 key: _keyPlayer1Name,
                 onLongPress: () async {
-                  TeamServe teamServe =
-                      await setServer(context, _keyPlayer1Name, 1, widget.player1Name);
+                  TeamServe teamServe = await setServer(
+                      context, _keyPlayer1Name, 1, widget.player1Name);
                   if (widget.onSetServeOrder != null) {
                     widget.onSetServeOrder(teamServe);
                   }
@@ -104,8 +122,8 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
             InkWell(
                 key: _keyPlayer2Name,
                 onLongPress: () async {
-                  TeamServe teamServe =
-                      await setServer(context, _keyPlayer2Name, 2, widget.player2Name);
+                  TeamServe teamServe = await setServer(
+                      context, _keyPlayer2Name, 2, widget.player2Name);
                   if (widget.onSetServeOrder != null) {
                     widget.onSetServeOrder(teamServe);
                   }
@@ -147,7 +165,8 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
     );
   }
 
-  Future<TeamServe> setServer(BuildContext context, GlobalKey playerKey, int player, String playerName) async {
+  Future<TeamServe> setServer(BuildContext context, GlobalKey playerKey,
+      int player, String playerName) async {
     if (MainInherited.of(context).canVibrate) {
       Vibrate.feedback(FeedbackType.success);
     }
