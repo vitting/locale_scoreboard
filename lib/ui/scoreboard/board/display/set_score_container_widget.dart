@@ -17,6 +17,17 @@ class SetScoreContainer extends StatelessWidget {
       ),
       margin: EdgeInsets.only(top: 10),
       padding: EdgeInsets.all(10),
+      // child: ListView.builder(
+      //   itemCount: sets.length,
+      //   itemBuilder: (BuildContext context, int position) {
+      //     print("VI WE ARE er Here");
+      //     return Column(
+      //       children: <Widget>[
+      //         Container()
+      //       ],
+      //     );
+      //   },
+      // ),
       child: Column(
         children: <Widget>[
           SetScore(

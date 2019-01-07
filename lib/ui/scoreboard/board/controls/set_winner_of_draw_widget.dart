@@ -6,9 +6,11 @@ class SetWinnerOfDraw extends StatefulWidget {
   final ValueChanged<int> onTapTeam;
   final Color teamAButtonColor;
   final Color teamBButtonColor;
+  final Stream<int> selectedButtonStream;
+  final int winnerOfDraw;
 
   const SetWinnerOfDraw(
-      {Key key, this.onTapTeam, this.teamAButtonColor, this.teamBButtonColor})
+      {Key key, this.onTapTeam, this.teamAButtonColor, this.teamBButtonColor, this.selectedButtonStream, this.winnerOfDraw})
       : super(key: key);
 
   @override
@@ -19,6 +21,26 @@ class SetWinnerOfDraw extends StatefulWidget {
 
 class SetWinnerOfDrawState extends State<SetWinnerOfDraw> {
   int _selected = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (mounted) {
+      setState(() {
+        _selected = widget.winnerOfDraw;
+      });
+    }
+
+    widget.selectedButtonStream.listen((int value) {
+      if (mounted) {
+        setState(() {
+          _selected = value;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(

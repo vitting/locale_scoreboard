@@ -21,7 +21,7 @@ class TeamTitle extends StatelessWidget {
           active
               ? Padding(
                   padding: const EdgeInsets.only(right: 5.0),
-                  child: Icon(FontAwesomeIcons.volleyballBall, color: color, size: 16.0),
+                  child: Icon(FontAwesomeIcons.solidCircle, color: color, size: 16.0),
                 )
               : Container(),
           InkWell(

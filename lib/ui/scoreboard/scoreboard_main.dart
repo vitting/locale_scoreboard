@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:locale_scoreboard/helpers/datetime_helpers.dart';
 import 'package:locale_scoreboard/helpers/db_helpers.dart';
 import 'package:locale_scoreboard/helpers/db_sql_create.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/scoreboard_board.dart';
@@ -7,10 +9,7 @@ import 'package:locale_scoreboard/ui/scoreboard/helpers/match_data.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/score_data.dart';
 
 enum BottomMenuResult { delete, edit }
-enum DeleteDialogResult {
-  yes,
-  no
-}
+enum DeleteDialogResult { yes, no }
 
 class Scoreboard extends StatefulWidget {
   static final routeName = "/scoreboard";
@@ -28,7 +27,7 @@ class _ScoreboardState extends State<Scoreboard> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.deepOrange,
         onPressed: () async {
-          MatchData match = await Navigator.of(context).push(MaterialPageRoute(
+          await Navigator.of(context).push(MaterialPageRoute(
               builder: (BuildContext context) =>
                   ScoreboardCreate(match: null)));
         },
@@ -50,38 +49,52 @@ class _ScoreboardState extends State<Scoreboard> {
             return ListView.builder(
               itemCount: m.length,
               itemBuilder: (BuildContext context, int position) {
-                MatchData match = m[position];
+                MatchData match = m[position];                
                 return Card(
                   child: ListTile(
-                    onLongPress: () async {
-                      BottomMenuResult result = await _showMenu(context);
+                      onLongPress: () async {
+                        BottomMenuResult result = await _showMenu(context);
 
-                      if (result != null) {
-                        switch (result) {
-                          case BottomMenuResult.edit:
-                            _editMatch(context, match);
-                            break;
-                          case BottomMenuResult.delete:
-                            DeleteDialogResult dialogResult = await _deleteMatchDialog(context, match);
-                            if (dialogResult != null && dialogResult == DeleteDialogResult.yes) {
-                              int deleteResult = await match.delete();
-                              if (deleteResult != 0) {
-                                setState(() {});
+                        if (result != null) {
+                          switch (result) {
+                            case BottomMenuResult.edit:
+                              _editMatch(context, match);
+                              break;
+                            case BottomMenuResult.delete:
+                              DeleteDialogResult dialogResult =
+                                  await _deleteMatchDialog(context, match);
+                              if (dialogResult != null &&
+                                  dialogResult == DeleteDialogResult.yes) {
+                                int deleteResult = await match.delete();
+                                if (deleteResult != 0) {
+                                  setState(() {});
+                                }
                               }
-                            }
-                            break;
+                              break;
+                          }
                         }
-                      }
-                    },
-                    onTap: () async {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                              ScoreboardBoard(
-                                match: match,
-                              )));
-                    },
-                    title: Text(match.title),
-                  ),
+                      },
+                      onTap: () async {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (BuildContext context) => ScoreboardBoard(
+                                  match: match,
+                                )));
+                      },
+                      title: Row(
+                        children: <Widget>[
+                          Icon(FontAwesomeIcons.solidCircle,
+                              size: 16,
+                              color: match.active
+                                  ? Colors.green[700]
+                                  : Colors.black),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 5),
+                            child: Text(match.title),
+                          )
+                        ],
+                      ),
+                      subtitle:
+                          Text(DateTimeHelpers.ddmmyyyy(match.createdDate))),
                 );
               },
             );
@@ -119,33 +132,33 @@ class _ScoreboardState extends State<Scoreboard> {
 
   void _editMatch(BuildContext context, MatchData match) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (BuildContext context) => ScoreboardCreate(
-        match: match,
-      )
-    ));
+        builder: (BuildContext context) => ScoreboardCreate(
+              match: match,
+            )));
   }
 
-  Future<DeleteDialogResult> _deleteMatchDialog(BuildContext context, MatchData match) {
+  Future<DeleteDialogResult> _deleteMatchDialog(
+      BuildContext context, MatchData match) {
     return showDialog<DeleteDialogResult>(
-      context: context,
-      builder: (BuildContext dialogContext) => AlertDialog(
-        title: Text("Delete"),
-        content: Text("Do you want to Delete the Match?\n\n${match.title}"),
-        actions: <Widget>[
-          FlatButton(
-            child: Text("No"),
-            onPressed: () {
-              Navigator.of(dialogContext).pop(DeleteDialogResult.no);
-            },
-          ),
-          FlatButton(
-            child: Text("Yes"),
-            onPressed: () {
-              Navigator.of(dialogContext).pop(DeleteDialogResult.yes);
-            },
-          )
-        ],
-      )
-    );
+        context: context,
+        builder: (BuildContext dialogContext) => AlertDialog(
+              title: Text("Delete"),
+              content:
+                  Text("Do you want to Delete the Match?\n\n${match.title}"),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text("No"),
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop(DeleteDialogResult.no);
+                  },
+                ),
+                FlatButton(
+                  child: Text("Yes"),
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop(DeleteDialogResult.yes);
+                  },
+                )
+              ],
+            ));
   }
 }

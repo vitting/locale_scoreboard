@@ -128,19 +128,24 @@ class DbHelpers {
         whereArgs: whereArgs);
   }
 
+  static Future<int> updateScoreState(int state, String id) async {
+    Database dbCon = await db;
+    return dbCon.rawUpdate("UPDATE scores SET state = ? WHERE id = ?", [state, id]);
+  }
+
   static Future<int> updateSetPointsFirstTo(int points, String id) async {
     Database dbCon = await db;
     return dbCon.rawUpdate("UPDATE scores SET setPointsFirstTo = ? WHERE id = ?", [points, id]);
   }
 
-  static Future<int> updateSetStart(int setStart, String id) async {
+  static Future<int> updateSetStart(int setStart, int state, String id) async {
     Database dbCon = await db;
-    return dbCon.rawUpdate("UPDATE scores SET setStart = ? WHERE id = ?", [setStart, id]);
+    return dbCon.rawUpdate("UPDATE scores SET setStart = ?, state = ? WHERE id = ?", [setStart, state, id]);
   }
 
-  static Future<int> updateSetEnd(int setEnd, String id) async {
+  static Future<int> updateSetEnd(int setEnd, int state, String id) async {
     Database dbCon = await db;
-    return dbCon.rawUpdate("UPDATE scores SET setEnd = ? WHERE id = ?", [setEnd, id]);
+    return dbCon.rawUpdate("UPDATE scores SET setEnd = ?, state = ? WHERE id = ?", [setEnd, state, id]);
   }
 
   static Future<int> updateElapsedTime(int elapsedTime, String id) async {

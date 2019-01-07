@@ -25,6 +25,12 @@ class ScoreData {
   int timeoutsTeam2;
   int activeTeam;
 
+  /// 0 = match is not started
+  /// 1 = match is started but set is not active
+  /// 2 = match is started and set is active
+  /// 3 = match is ended
+  int state;
+
   ScoreData(
       {this.id,
       @required this.matchId,
@@ -40,15 +46,21 @@ class ScoreData {
       this.setTeam1 = 0,
       this.setTeam2 = 0,
       this.pointsTeam1 = 0,
-      this.setPointsFirstTo = 0,
+      this.setPointsFirstTo = 21,
       this.pointsTeam2 = 0,
       this.timeoutsTeam1 = 0,
       this.timeoutsTeam2 = 0,
-      this.activeTeam = 0});
+      this.activeTeam = 0,
+      this.state = 0});
 
   // save -> save statistic
   // save set
   // delete set
+
+  Future<int> updateState(int state) {
+    this.state = state;
+    return DbHelpers.updateScoreState(state, id);
+  }
 
   Future<int> updateSetPointsFirstTo(int points) {
     setPointsFirstTo = points;
@@ -56,13 +68,15 @@ class ScoreData {
   }
 
   Future<int> updateSetStart(DateTime time) {
+    state = 2;
     setStart = time;
-    return DbHelpers.updateSetStart(setStart.millisecondsSinceEpoch, id);
+    return DbHelpers.updateSetStart(setStart.millisecondsSinceEpoch, state, id);
   }
 
   Future<int> updateSetEnd(DateTime time) {
+    state = 1;
     setEnd = time;
-    return DbHelpers.updateSetEnd(setEnd.millisecondsSinceEpoch, id);
+    return DbHelpers.updateSetEnd(setEnd.millisecondsSinceEpoch, state, id);
   }
 
   Future<int> updateStartingWithTheServe(int team) {
@@ -144,6 +158,7 @@ class ScoreData {
     timeoutsTeam2 = 0;
     activeTeam = 0;
     setPointsFirstTo = 21;
+    state = 1;
 
     return DbHelpers.update(DbSql.tableScores, this.toMap(), "id = ?", [id]);
   }
@@ -173,6 +188,7 @@ class ScoreData {
       "timeoutsTeam1": timeoutsTeam1,
       "timeoutsTeam2": timeoutsTeam2,
       "activeTeam": activeTeam,
+      "state": state
     };
   }
 
@@ -196,6 +212,7 @@ class ScoreData {
         timeoutsTeam1: item["timeoutsTeam1"],
         timeoutsTeam2: item["timeoutsTeam2"],
         startingWithTheServe: item["startingWithTheServe"],
-        activeTeam: item["activeTeam"]);
+        activeTeam: item["activeTeam"],
+        state: item["state"]);
   }
 }

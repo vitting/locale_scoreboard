@@ -6,9 +6,15 @@ class SetStartWithServe extends StatefulWidget {
   final ValueChanged<int> onTapTeam;
   final Color teamAButtonColor;
   final Color teamBButtonColor;
+  final Stream<int> selectedButtonStream;
+  final int setStartWithServe;
 
   const SetStartWithServe(
-      {Key key, this.onTapTeam, this.teamAButtonColor, this.teamBButtonColor})
+      {Key key,
+      this.onTapTeam,
+      this.teamAButtonColor,
+      this.teamBButtonColor,
+      this.selectedButtonStream, this.setStartWithServe})
       : super(key: key);
 
   @override
@@ -19,6 +25,26 @@ class SetStartWithServe extends StatefulWidget {
 
 class SetStartWithServeState extends State<SetStartWithServe> {
   int _selected = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (mounted) {
+      setState(() {
+        _selected = widget.setStartWithServe;
+      });
+    }
+
+    widget.selectedButtonStream.listen((int value) {
+      if (mounted) {
+        setState(() {
+          _selected = value;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(

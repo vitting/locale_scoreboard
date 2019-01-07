@@ -5,9 +5,10 @@ import 'package:vibrate/vibrate.dart';
 class SetNumberOfPointsForSet extends StatefulWidget {
   final ValueChanged<int> onTapPoints;
   final Stream<int> pointsInSetStream;
+  final int pointsInSet;
 
   const SetNumberOfPointsForSet(
-      {Key key, this.onTapPoints, this.pointsInSetStream})
+      {Key key, this.onTapPoints, this.pointsInSetStream, this.pointsInSet})
       : super(key: key);
 
   @override
@@ -22,10 +23,15 @@ class SetNumberOfPointsForSetState extends State<SetNumberOfPointsForSet> {
   @override
   void initState() {
     super.initState();
-
+    if (mounted) {
+      setState(() {
+        _numberOfPointsInSet = widget.pointsInSet;
+      });
+    }
     widget.pointsInSetStream.listen((int points) {
       if (mounted) {
         setState(() {
+          print(points);
           _numberOfPointsInSet = points;
         });
       }
@@ -39,7 +45,7 @@ class SetNumberOfPointsForSetState extends State<SetNumberOfPointsForSet> {
         Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
           Padding(
             padding: const EdgeInsets.only(right: 10),
-            child: Text("Points in set",
+            child: Text("Set points in set",
                 style: TextStyle(color: Colors.white, fontSize: 16)),
           ),
           InkWell(
@@ -60,7 +66,7 @@ class SetNumberOfPointsForSetState extends State<SetNumberOfPointsForSet> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: Colors.blue[700],
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 1.0)),
                 child: Center(
