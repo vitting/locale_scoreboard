@@ -52,6 +52,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   int _setStartWithServe = 0;
   int _controlStep = 0;
   bool _showBox1 = false;
+  bool _canLongPressNames = true;
   int _elapsedTime = 0;
   ScoreData _scoreData;
   List<SetData> _sets = [];
@@ -87,6 +88,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
           _winnerOfDraw = _scoreData.winnerOfDraw;
           _setStartWithServe = _scoreData.startingWithTheServe;
         } else {
+          _canLongPressNames = false;
           _controlStep = 2;
         }
 
@@ -94,6 +96,11 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
           _sets = sets;
         }
       });
+
+      if (_scoreData.state >= 1 && _scoreData.state <= 2) {
+        _boardController.add(ControllerData(
+            ControllerType.time, TimerValues(TimerState.start, _elapsedTime)));
+      }
 
       if (_scoreData.state != 3) {
         _boardController.add(ControllerData(
@@ -186,6 +193,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                     Row(
                       children: <Widget>[
                         TeamPlayerNames(
+                          canLongPress: _canLongPressNames,
                           team: 1,
                           teamOrderOfServeStream: _boardController.stream,
                           player1Name: _teamAPlayer1,
@@ -201,6 +209,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                           },
                         ),
                         TeamPlayerNames(
+                          canLongPress: _canLongPressNames,
                           team: 2,
                           teamOrderOfServeStream: _boardController.stream,
                           player1Name: _teamBPlayer1,
@@ -285,6 +294,8 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
           _showControls(true);
           await widget.match.updateMatchStarted(time);
           await _scoreData.updateSetStart(time);
+          _boardController.add(ControllerData(ControllerType.time,
+              TimerValues(TimerState.start, _elapsedTime)));
         });
   }
 
@@ -551,13 +562,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     if (result != null && result == true) {
       _showControls(false);
     } else if (result != null && result == false) {
-      _boardController.add(ControllerData(
-          ControllerType.time, TimerValues(TimerState.cancel, 0)));
-      await _scoreData.updateState(3);
-      await widget.match.updateMatchEnded(DateTime.now());
-      setState(() {
-        _controlStep = 0;
-      });
+      _matchWon();
     }
   }
 
@@ -619,6 +624,16 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
       _pointsInSet = _scoreData.setPointsFirstTo;
       _winnerOfDraw = _scoreData.winnerOfDraw;
       _setStartWithServe = _scoreData.startingWithTheServe;
+    });
+  }
+
+  Future<void> _matchWon() async {
+    _boardController.add(
+        ControllerData(ControllerType.time, TimerValues(TimerState.cancel, 0)));
+    await _scoreData.updateState(3);
+    await widget.match.updateMatchEnded(DateTime.now());
+    setState(() {
+      _controlStep = 0;
     });
   }
 
@@ -708,8 +723,6 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         _mainControlsDisplay = CrossFadeState.showSecond;
         _mainDisplay = CrossFadeState.showSecond;
         _controlStep = 1;
-        _boardController.add(ControllerData(
-            ControllerType.time, TimerValues(TimerState.start, _elapsedTime)));
       } else {
         _mainControlsDisplay = CrossFadeState.showFirst;
         _mainDisplay = CrossFadeState.showFirst;

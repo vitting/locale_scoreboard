@@ -9,7 +9,7 @@ class SetScoreContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
+      width: 210,
       decoration: BoxDecoration(
         color: Colors.black26,
         shape: BoxShape.rectangle,

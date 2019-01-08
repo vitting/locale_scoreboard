@@ -20,6 +20,7 @@ class TeamPlayerNames extends StatefulWidget {
   final int playerActive;
   final ValueChanged<TeamServe> onSetServeOrder;
   final Stream<ControllerData> teamOrderOfServeStream;
+  final bool canLongPress;
 
   const TeamPlayerNames(
       {Key key,
@@ -31,7 +32,8 @@ class TeamPlayerNames extends StatefulWidget {
       this.teamColor,
       this.playerActiveColor,
       this.onSetServeOrder,
-      this.teamOrderOfServeStream})
+      this.teamOrderOfServeStream,
+      this.canLongPress = true})
       : super(key: key);
 
   @override
@@ -85,10 +87,12 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
             InkWell(
                 key: _keyPlayer1Name,
                 onLongPress: () async {
-                  TeamServe teamServe = await setServer(
-                      context, _keyPlayer1Name, 1, widget.player1Name);
-                  if (widget.onSetServeOrder != null) {
-                    widget.onSetServeOrder(teamServe);
+                  if (widget.canLongPress) {
+                    TeamServe teamServe = await setServer(
+                        context, _keyPlayer1Name, 1, widget.player1Name);
+                    if (widget.onSetServeOrder != null) {
+                      widget.onSetServeOrder(teamServe);
+                    }
                   }
                 },
                 child: Row(
@@ -130,10 +134,12 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
             InkWell(
                 key: _keyPlayer2Name,
                 onLongPress: () async {
-                  TeamServe teamServe = await setServer(
-                      context, _keyPlayer2Name, 2, widget.player2Name);
-                  if (widget.onSetServeOrder != null) {
-                    widget.onSetServeOrder(teamServe);
+                  if (widget.canLongPress) {
+                    TeamServe teamServe = await setServer(
+                        context, _keyPlayer2Name, 2, widget.player2Name);
+                    if (widget.onSetServeOrder != null) {
+                      widget.onSetServeOrder(teamServe);
+                    }
                   }
                 },
                 child: Row(
