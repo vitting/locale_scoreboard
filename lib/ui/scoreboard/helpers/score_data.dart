@@ -164,7 +164,7 @@ class ScoreData {
   }
 
   Future<int> delete() {
-    return DbHelpers.delete(DbSql.tableScores, id);
+    return DbHelpers.deleteById(DbSql.tableScores, id);
   }
 
   Map<String, dynamic> toMap() {

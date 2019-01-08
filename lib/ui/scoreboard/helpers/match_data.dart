@@ -63,9 +63,10 @@ class MatchData {
     return scoreData;
   }
 
-  Future<int> delete() {
-    /// TODO: Delete score and set and statistics
-    return DbHelpers.delete(DbSql.tableMatches, this.id);
+  Future<int> delete() async {
+    await DbHelpers.deleteByMatchId(DbSql.tableScores, id);
+    await DbHelpers.deleteByMatchId(DbSql.tableSets, id);
+    return DbHelpers.deleteById(DbSql.tableMatches, this.id);
   }
 
   Future<int> save() async {

@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:locale_scoreboard/helpers/db_helpers.dart';
-import 'package:locale_scoreboard/helpers/db_sql_create.dart';
+import 'package:locale_scoreboard/helpers/board_theme.dart';
+import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/dialog_ok_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/dialog_yes_no_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/controls_container_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/results_container_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/display/set_score_container_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/setup_set_container_widget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/helpers/dialog_round_button_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/match_data.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/score_data.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/set_data.dart';
@@ -28,25 +29,8 @@ class ScoreboardBoard extends StatefulWidget {
 
 class _ScoreboardBoardState extends State<ScoreboardBoard>
     with TickerProviderStateMixin {
-  StreamController<TimerValues> _timeController =
-      StreamController<TimerValues>.broadcast();
-  StreamController<TeamServe> _serveOrderTeam1Controller =
-      StreamController<TeamServe>.broadcast();
-  StreamController<TeamServe> _serveOrderTeam2Controller =
-      StreamController<TeamServe>.broadcast();
-  StreamController<int> _numberOfPointsInSetController =
-      StreamController<int>.broadcast();
-  StreamController<int> _winnerOfDrawSelectedButtonController =
-      StreamController<int>.broadcast();
-  StreamController<int> _startWithServeSelectedButtonController =
-      StreamController<int>.broadcast();
-  Color _teamAColor = Colors.white;
-  Color _teamBColor = Colors.white;
-  Color _teamAColorControls = Colors.white;
-  Color _teamBColorControls = Colors.white;
-  Color _teamActiveColor = Colors.deepOrange[900];
-  Color _teamAColorDefault = Colors.blue[900];
-  Color _teamBColorDefault = Colors.blue[500];
+  StreamController<ControllerData> _boardController =
+      StreamController<ControllerData>.broadcast();
   Color _teamAColorActive = Colors.blue[900];
   Color _teamBColorActive = Colors.blue[500];
   bool _teamAActive = false;
@@ -55,11 +39,10 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   bool _teamBWinnerOfServe = false;
   int _teamASets = 0;
   int _teamBSets = 0;
-  int _setNumber = 0;
-  String _teamAPlayer1 = "Christian Vitting Nicolaisen";
-  String _teamAPlayer2 = "Irene Hansen";
-  String _teamBPlayer1 = "Martin Jensen";
-  String _teamBPlayer2 = "Allan Pedersen";
+  String _teamAPlayer1 = "";
+  String _teamAPlayer2 = "";
+  String _teamBPlayer1 = "";
+  String _teamBPlayer2 = "";
   int _teamAPoints = 0;
   int _teamBPoints = 0;
   int _teamATimeouts = 0;
@@ -83,55 +66,69 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
 
   void _initData() async {
     _scoreData = await widget.match.getScore();
-    _sets = await widget.match.getSets();
-
+    List<SetData> sets = await widget.match.getSets();
+    print("State: ${_scoreData.state}");
     if (mounted) {
       setState(() {
         _teamAPlayer1 = widget.match.namePlayer1Team1;
         _teamAPlayer2 = widget.match.namePlayer2Team1;
         _teamBPlayer1 = widget.match.namePlayer1Team2;
         _teamBPlayer2 = widget.match.namePlayer2Team2;
-        _teamAPoints = _scoreData.pointsTeam1;
-        _teamBPoints = _scoreData.pointsTeam2;
-        _teamASets = _scoreData.setTeam1;
-        _teamBSets = _scoreData.setTeam2;
-        _setNumber = _scoreData.setTeam1 + _scoreData.setTeam2;
-        _teamATimeouts = _scoreData.timeoutsTeam1;
-        _teamBTimeouts = _scoreData.timeoutsTeam2;
-        _elapsedTime = _scoreData.elapsedTime.inSeconds;
-        _pointsInSet = _scoreData.setPointsFirstTo;
-        _winnerOfDraw = _scoreData.winnerOfDraw;
-        _setStartWithServe = _scoreData.startingWithTheServe;
+
+        if (_scoreData.state != 3) {
+          _teamAPoints = _scoreData.pointsTeam1;
+          _teamBPoints = _scoreData.pointsTeam2;
+          _teamASets = _scoreData.setTeam1;
+          _teamBSets = _scoreData.setTeam2;
+          _teamATimeouts = _scoreData.timeoutsTeam1;
+          _teamBTimeouts = _scoreData.timeoutsTeam2;
+          _elapsedTime = _scoreData.elapsedTime.inSeconds;
+          _pointsInSet = _scoreData.setPointsFirstTo;
+          _winnerOfDraw = _scoreData.winnerOfDraw;
+          _setStartWithServe = _scoreData.startingWithTheServe;
+        } else {
+          _controlStep = 2;
+        }
+
+        if (sets.length != 0) {
+          _sets = sets;
+        }
       });
 
-      _numberOfPointsInSetController.add(_scoreData.setPointsFirstTo);
+      if (_scoreData.state != 3) {
+        _boardController.add(ControllerData(
+            ControllerType.numberOfPointsInSet, _scoreData.setPointsFirstTo));
 
-      if (_scoreData.orderOfServePlayer1Team1 != 0 &&
-          _scoreData.orderOfServePlayer2Team1 != 0) {
-        _serveOrderTeam1Controller.add(TeamServe(
-            _scoreData.orderOfServePlayer1Team1,
-            _scoreData.orderOfServePlayer2Team1));
-      }
-      if (_scoreData.orderOfServePlayer1Team2 != 0 &&
-          _scoreData.orderOfServePlayer2Team2 != 0) {
-        _serveOrderTeam2Controller.add(TeamServe(
-            _scoreData.orderOfServePlayer1Team2,
-            _scoreData.orderOfServePlayer2Team2));
-      }
+        if (_scoreData.orderOfServePlayer1Team1 != 0 &&
+            _scoreData.orderOfServePlayer2Team1 != 0) {
+          _boardController.add(ControllerData(
+              ControllerType.serveOrderTeam1,
+              TeamServe(_scoreData.orderOfServePlayer1Team1,
+                  _scoreData.orderOfServePlayer2Team1)));
+        }
+        if (_scoreData.orderOfServePlayer1Team2 != 0 &&
+            _scoreData.orderOfServePlayer2Team2 != 0) {
+          _boardController.add(ControllerData(
+              ControllerType.serveOrderTeam2,
+              TeamServe(_scoreData.orderOfServePlayer1Team2,
+                  _scoreData.orderOfServePlayer2Team2)));
+        }
 
-      if (_scoreData.winnerOfDraw != 0) {
-        _winnerOfDrawSelectedButtonController.add(_scoreData.winnerOfDraw);
-        _setWinnerOfDraw(_scoreData.winnerOfDraw);
-      }
+        if (_scoreData.winnerOfDraw != 0) {
+          _boardController.add(ControllerData(
+              ControllerType.winnerOfDraw, _scoreData.winnerOfDraw));
+          _setWinnerOfDraw(_scoreData.winnerOfDraw);
+        }
 
-      if (_scoreData.startingWithTheServe != 0) {
-        _startWithServeSelectedButtonController
-            .add(_scoreData.startingWithTheServe);
-        _startWithServe(_scoreData.startingWithTheServe);
-      }
+        if (_scoreData.startingWithTheServe != 0) {
+          _boardController.add(ControllerData(
+              ControllerType.startWithServe, _scoreData.startingWithTheServe));
+          _startWithServe(_scoreData.startingWithTheServe);
+        }
 
-      if (widget.match.active) {
-        _showControls(true);
+        if (widget.match.active && _scoreData.state == 2) {
+          _showControls(true);
+        }
       }
     }
   }
@@ -139,12 +136,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   @override
   void dispose() {
     _scoreData.updateElapsedTime(_elapsedTime);
-    _timeController.close();
-    _numberOfPointsInSetController.close();
-    _serveOrderTeam1Controller.close();
-    _serveOrderTeam2Controller.close();
-    _startWithServeSelectedButtonController.close();
-    _winnerOfDrawSelectedButtonController.close();
+    _boardController.close();
     super.dispose();
   }
 
@@ -157,54 +149,9 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     return Stack(
       children: <Widget>[
         Container(
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.1, 0.5, 0.7, 0.9],
-            colors: [
-              Colors.black,
-              Colors.blue[900],
-              Colors.blue[900],
-              Colors.black
-            ],
-          )),
+          decoration: BoardTheme.background,
           child: ListView(
             children: <Widget>[
-              RaisedButton(
-                child: Text("TEST"),
-                onPressed: () async {
-                  List<Map<String, dynamic>> list = await DbHelpers.query(
-                      DbSql.tableScores,
-                      where: "matchId = ?",
-                      whereArgs: [widget.match.id]);
-                  debugPrint(list.toString());
-
-                  List<Map<String, dynamic>> list2 = await DbHelpers.query(
-                      DbSql.tableMatches,
-                      where: "id = ?",
-                      whereArgs: [widget.match.id]);
-                  debugPrint(list2.toString());
-
-                  // List<Map<String, dynamic>> list3 = await DbHelpers.query(
-                  //     DbSql.tableSets,
-                  //     where: "matchId = ?",
-                  //     whereArgs: [widget.match.id]);
-                  // debugPrint(list3.toString());
-
-
-                  // _showControls(false);
-                  // setState(() {
-                  //   if (_mainDisplay == CrossFadeState.showFirst) {
-                  //     _mainDisplay = CrossFadeState.showSecond;
-                  //   } else {
-                  //     _mainDisplay = CrossFadeState.showFirst;
-                  //   }
-                  // });
-                  // List<SetData> sets = await widget.match.getSets();
-                  // print(sets);
-                },
-              ),
               Container(
                 padding: EdgeInsets.only(top: 15.0, bottom: 20.0),
                 child: Column(
@@ -212,20 +159,20 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                     Row(
                       children: <Widget>[
                         TeamTitle(
-                          color: _teamAColor,
+                          color: BoardTheme.teamATextColor,
                           text: "Team A",
                           active: _teamAActive,
                           winnerOfServe: _teamAWinnerOfServe,
                           team: 1,
                         ),
                         SetTime(
-                          timeStream: _timeController.stream,
+                          timeStream: _boardController.stream,
                           onTimeChange: (int time) {
                             _elapsedTime = time;
                           },
                         ),
                         TeamTitle(
-                          color: _teamBColor,
+                          color: BoardTheme.teamBTextColor,
                           text: "Team B",
                           active: _teamBActive,
                           winnerOfServe: _teamBWinnerOfServe,
@@ -239,13 +186,13 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                     Row(
                       children: <Widget>[
                         TeamPlayerNames(
-                          teamOrderOfServeStream:
-                              _serveOrderTeam1Controller.stream,
+                          team: 1,
+                          teamOrderOfServeStream: _boardController.stream,
                           player1Name: _teamAPlayer1,
                           player2Name: _teamAPlayer2,
-                          teamColor: _teamAColor,
+                          teamColor: BoardTheme.teamATextColor,
                           teamActiveColor: _teamAColorActive,
-                          playerActiveColor: _teamAColorDefault,
+                          playerActiveColor: BoardTheme.teamADefaultColor,
                           playerActive: 0,
                           onSetServeOrder: (teamServe) {
                             if (teamServe != null) {
@@ -254,13 +201,13 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                           },
                         ),
                         TeamPlayerNames(
-                          teamOrderOfServeStream:
-                              _serveOrderTeam2Controller.stream,
+                          team: 2,
+                          teamOrderOfServeStream: _boardController.stream,
                           player1Name: _teamBPlayer1,
                           player2Name: _teamBPlayer2,
-                          teamColor: _teamBColor,
+                          teamColor: BoardTheme.teamBTextColor,
                           teamActiveColor: _teamBColorActive,
-                          playerActiveColor: _teamBColorDefault,
+                          playerActiveColor: BoardTheme.teamBDefaultColor,
                           playerActive: 0,
                           onSetServeOrder: (teamServe) {
                             if (teamServe != null) {
@@ -271,6 +218,14 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                       ],
                     ),
                     Padding(padding: EdgeInsets.symmetric(vertical: 5.0)),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _sets.length != 0
+                          ? SetScoreContainer(
+                              sets: _sets,
+                            )
+                          : Container(),
+                    ),
                     AnimatedCrossFade(
                       crossFadeState: _mainDisplay,
                       duration: Duration(milliseconds: 400),
@@ -304,17 +259,15 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
 
   Widget _setupSet() {
     return SetupSetContainer(
-        teamAButtonColor: _teamAColorDefault,
-        teamBButtonColor: _teamBColorDefault,
+        teamAButtonColor: BoardTheme.teamADefaultColor,
+        teamBButtonColor: BoardTheme.teamBDefaultColor,
         pointsInSet: _pointsInSet,
-        numberOfPointsInSetStream: _numberOfPointsInSetController.stream,
+        stream: _boardController.stream,
         onTapSetNumberOfPointsForSet: (int points) {
           _pointsInSet = points;
           _scoreData.updateSetPointsFirstTo(points);
         },
         winnerOfDraw: _winnerOfDraw,
-        winnerOfDrawSelectedButtonStream:
-            _winnerOfDrawSelectedButtonController.stream,
         onTapSetWinnerOfDraw: (int team) {
           _setWinnerOfDraw(team);
         },
@@ -324,8 +277,6 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
           });
         },
         setStartWithServe: _setStartWithServe,
-        startWithServeSelectedButtonStream:
-            _startWithServeSelectedButtonController.stream,
         onTapSetStartWithServe: (int team) {
           _startWithServe(team);
         },
@@ -341,8 +292,8 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     return ControlsContainer(
         teamAColorActive: _teamAColorActive,
         teamBColorActive: _teamBColorActive,
-        teamAColorControls: _teamAColorControls,
-        teamBColorControls: _teamBColorControls,
+        teamAColorControls: BoardTheme.teamAControlsColor,
+        teamBColorControls: BoardTheme.teamBControlsColor,
         onTapAddPoints: _addPoints,
         onTapRemovePoints: _removePoints,
         onTapAddTimeouts: _addTimeouts,
@@ -352,8 +303,8 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   Widget _results() {
     return ResultsContainer(
       sets: _sets,
-      teamAColor: _teamAColor,
-      teamBColor: _teamBColor,
+      teamAColor: BoardTheme.teamATextColor,
+      teamBColor: BoardTheme.teamBTextColor,
       teamAColorActive: _teamAColorActive,
       teamBColorActive: _teamBColorActive,
       teamASets: _teamASets,
@@ -422,6 +373,8 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
           _scoreData.updateTimeouts(
               _teamATimeouts, _teamBTimeouts, _elapsedTime);
         });
+      } else {
+        _showNoTimeoutsLeft(context, 1);
       }
     } else {
       if (_teamBTimeouts + 1 <= 2) {
@@ -430,6 +383,8 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
           _scoreData.updateTimeouts(
               _teamATimeouts, _teamBTimeouts, _elapsedTime);
         });
+      } else {
+        _showNoTimeoutsLeft(context, 2);
       }
     }
   }
@@ -522,41 +477,39 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     return value;
   }
 
-  void _showTechnicalTimeout(BuildContext context) async {
+  Future<void> _showNoTimeoutsLeft(BuildContext context, int team) async {
     await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext dialogContext) {
-          return AlertDialog(
-              title: Text("Technical Timeout"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Text("Teams has Technical Timeout!"),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      if (MainInherited.of(context).canVibrate) {
-                        Vibrate.feedback(FeedbackType.medium);
-                      }
-                      Navigator.of(dialogContext).pop(true);
-                    },
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      child: Center(
-                          child: Text("Ok",
-                              style: TextStyle(color: Colors.white))),
-                      decoration: BoxDecoration(
-                          color: Colors.green[900],
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black, width: 1.0)),
-                    ),
-                  )
-                ],
-              ));
+          return DialogOk(
+            title: "No more Timeouts",
+            body: "Team ${team == 1 ? "A" : "B"} has no Timeouts left!",
+            onTap: () {
+              if (MainInherited.of(context).canVibrate) {
+                Vibrate.feedback(FeedbackType.medium);
+              }
+              Navigator.of(dialogContext).pop(true);
+            },
+          );
+        });
+  }
+
+  Future<void> _showTechnicalTimeout(BuildContext context) async {
+    await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) {
+          return DialogOk(
+            title: "Technical Timeout",
+            body: "Teams has Technical Timeout!",
+            onTap: () {
+              if (MainInherited.of(context).canVibrate) {
+                Vibrate.feedback(FeedbackType.medium);
+              }
+              Navigator.of(dialogContext).pop(true);
+            },
+          );
         });
   }
 
@@ -565,47 +518,46 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         context: context,
         barrierDismissible: false,
         builder: (BuildContext dialogContext) {
-          return AlertDialog(
-              title: Text("Continue match?"),
-              content: DialogYesNo(
-                team: team,
-                content: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          return DialogYesNo(
+            title: "Continue match?",
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Text("Press"),
-                        Text(" YES", style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(" to play more sets.")
-                      ],
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Text("Press"),
-                        Text(" NO", style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(" to end the match."),
-                      ],
-                    )
+                    Text("Press"),
+                    Text(" YES", style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(" to play more sets.")
                   ],
                 ),
-                onTap: (bool value) {
-                  if (MainInherited.of(context).canVibrate) {
-                    Vibrate.feedback(FeedbackType.medium);
-                  }
-                  Navigator.of(dialogContext).pop(value);
-                },
-              ));
+                Row(
+                  children: <Widget>[
+                    Text("Press"),
+                    Text(" NO", style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(" to end the match."),
+                  ],
+                )
+              ],
+            ),
+            onTap: (bool value) {
+              if (MainInherited.of(context).canVibrate) {
+                Vibrate.feedback(FeedbackType.medium);
+              }
+              Navigator.of(dialogContext).pop(value);
+            },
+          );
         });
 
     if (result != null && result == true) {
       _showControls(false);
     } else if (result != null && result == false) {
-      _timeController.add(TimerValues(TimerState.cancel, 0));
+      _boardController.add(ControllerData(
+          ControllerType.time, TimerValues(TimerState.cancel, 0)));
       await _scoreData.updateState(3);
       await widget.match.updateMatchEnded(DateTime.now());
       setState(() {
-              _controlStep = 0;
-            });
+        _controlStep = 0;
+      });
     }
   }
 
@@ -614,27 +566,23 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         context: context,
         barrierDismissible: false,
         builder: (BuildContext dialogContext) {
-          return AlertDialog(
-            title: Text("Set won"),
-            content: DialogYesNo(
-              team: team,
+          return DialogYesNo(
+              title: "Set won",
               content: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Text("Team ${team == 1 ? "A" : "B"}",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(" "),
-                        Expanded(child:Text("won the set?"))
-                      ],
-                    ),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text("Team ${team == 1 ? "A" : "B"}",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(" "),
+                  Expanded(child: Text("won the set?"))
+                ],
+              ),
               onTap: (bool value) {
                 if (MainInherited.of(context).canVibrate) {
                   Vibrate.feedback(FeedbackType.medium);
                 }
                 Navigator.of(dialogContext).pop(value);
-              },
-            ),
-          );
+              });
         });
 
     if (result != null && result == true) {
@@ -657,15 +605,15 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
 
     SetData setData = SetData.fromScoreData(_scoreData, team);
     await setData.save();
-    //TODO: Vi skal opdatere sets
     await _scoreData.resetScore();
+    List<SetData> sets = await widget.match.getSets();
 
     setState(() {
+      _sets = sets;
       _teamAPoints = _scoreData.pointsTeam1;
       _teamBPoints = _scoreData.pointsTeam2;
       _teamASets = _scoreData.setTeam1;
       _teamBSets = _scoreData.setTeam2;
-      _setNumber = _scoreData.setTeam1 + _scoreData.setTeam2;
       _teamATimeouts = _scoreData.timeoutsTeam1;
       _teamBTimeouts = _scoreData.timeoutsTeam2;
       _pointsInSet = _scoreData.setPointsFirstTo;
@@ -679,27 +627,15 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         context: context,
         barrierDismissible: false,
         builder: (BuildContext dialogContext) {
-          return AlertDialog(
-              title: Text("Side Change"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Text("Teams have to change sides!"),
-                  ),
-                  DialogRoundButton(
-                    title: "OK",
-                    color: Colors.green[900],
-                    onTap: () {
-                      if (MainInherited.of(context).canVibrate) {
-                        Vibrate.feedback(FeedbackType.medium);
-                      }
-                      Navigator.of(dialogContext).pop(true);
-                    },
-                  )
-                ],
-              ));
+          return DialogOk(
+              title: "Side Change",
+              body: "Teams have to change sides!",
+              onTap: () {
+                if (MainInherited.of(context).canVibrate) {
+                  Vibrate.feedback(FeedbackType.medium);
+                }
+                Navigator.of(dialogContext).pop(true);
+              });
         });
   }
 
@@ -708,16 +644,16 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
 
     switch (team) {
       case 0:
-        _teamAColorActive = _teamAColorDefault;
-        _teamBColorActive = _teamBColorDefault;
+        _teamAColorActive = BoardTheme.teamADefaultColor;
+        _teamBColorActive = BoardTheme.teamBDefaultColor;
         break;
       case 1:
-        _teamAColorActive = _teamActiveColor;
-        _teamBColorActive = _teamBColorDefault;
+        _teamAColorActive = BoardTheme.teamActiveColor;
+        _teamBColorActive = BoardTheme.teamBDefaultColor;
         break;
       case 2:
-        _teamAColorActive = _teamAColorDefault;
-        _teamBColorActive = _teamActiveColor;
+        _teamAColorActive = BoardTheme.teamADefaultColor;
+        _teamBColorActive = BoardTheme.teamActiveColor;
         break;
     }
   }
@@ -772,7 +708,8 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         _mainControlsDisplay = CrossFadeState.showSecond;
         _mainDisplay = CrossFadeState.showSecond;
         _controlStep = 1;
-        _timeController.add(TimerValues(TimerState.start, _elapsedTime));
+        _boardController.add(ControllerData(
+            ControllerType.time, TimerValues(TimerState.start, _elapsedTime)));
       } else {
         _mainControlsDisplay = CrossFadeState.showFirst;
         _mainDisplay = CrossFadeState.showFirst;

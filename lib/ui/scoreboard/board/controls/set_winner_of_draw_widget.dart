@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
 import 'package:vibrate/vibrate.dart';
 
@@ -6,11 +7,16 @@ class SetWinnerOfDraw extends StatefulWidget {
   final ValueChanged<int> onTapTeam;
   final Color teamAButtonColor;
   final Color teamBButtonColor;
-  final Stream<int> selectedButtonStream;
+  final Stream<ControllerData> selectedButtonStream;
   final int winnerOfDraw;
 
   const SetWinnerOfDraw(
-      {Key key, this.onTapTeam, this.teamAButtonColor, this.teamBButtonColor, this.selectedButtonStream, this.winnerOfDraw})
+      {Key key,
+      this.onTapTeam,
+      this.teamAButtonColor,
+      this.teamBButtonColor,
+      this.selectedButtonStream,
+      this.winnerOfDraw})
       : super(key: key);
 
   @override
@@ -32,11 +38,13 @@ class SetWinnerOfDrawState extends State<SetWinnerOfDraw> {
       });
     }
 
-    widget.selectedButtonStream.listen((int value) {
-      if (mounted) {
-        setState(() {
-          _selected = value;
-        });
+    widget.selectedButtonStream.listen((ControllerData item) {
+      if (item.type == ControllerType.winnerOfDraw) {
+        if (mounted) {
+          setState(() {
+            _selected = item.data;
+          });
+        }
       }
     });
   }

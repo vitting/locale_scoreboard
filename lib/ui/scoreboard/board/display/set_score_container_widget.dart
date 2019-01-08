@@ -9,6 +9,7 @@ class SetScoreContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 200,
       decoration: BoxDecoration(
         color: Colors.black26,
         shape: BoxShape.rectangle,
@@ -17,42 +18,22 @@ class SetScoreContainer extends StatelessWidget {
       ),
       margin: EdgeInsets.only(top: 10),
       padding: EdgeInsets.all(10),
-      // child: ListView.builder(
-      //   itemCount: sets.length,
-      //   itemBuilder: (BuildContext context, int position) {
-      //     print("VI WE ARE er Here");
-      //     return Column(
-      //       children: <Widget>[
-      //         Container()
-      //       ],
-      //     );
-      //   },
-      // ),
-      child: Column(
-        children: <Widget>[
-          SetScore(
-            setNumber: 1,
-            setTime: 23,
-            teamAPoints: 21,
-            teamBPoints: 18,
-            winnerTeam: 1,
-          ),
-          SetScore(
-            setNumber: 1,
-            setTime: 23,
-            teamAPoints: 21,
-            teamBPoints: 18,
-            winnerTeam: 1,
-          ),
-          SetScore(
-            setNumber: 1,
-            setTime: 23,
-            teamAPoints: 21,
-            teamBPoints: 18,
-            winnerTeam: 1,
-          )
-        ],
-      ),
+      child: ListView.builder(
+        primary: false,
+        shrinkWrap: true,
+        itemCount: sets.length,
+        itemBuilder: (BuildContext context, int position) {
+          SetData item = sets[position];
+          return SetScore(
+            setNumber: item.setNumber,
+            teamAPoints: item.pointsTeam1,
+            teamBPoints: item.pointsTeam2,
+            winnerTeam: item.winnerTeam,
+            setTime: item.getSetTime(),
+            lastItem: sets.length - 1  == position,
+          );
+        },
+      )
     );
   }
 }

@@ -58,13 +58,7 @@ class ResultsContainer extends StatelessWidget {
               teamAColorActive: teamAColorActive,
               teamBColorActive: teamBColorActive,
               teamATimeouts: teamATimeouts,
-              teamBTimeouts: teamBTimeouts),
-          SetScoreContainer(
-            sets: sets,
-          ),
-          // Divider(
-          //   color: Colors.white,
-          // ),
+              teamBTimeouts: teamBTimeouts)
         ],
       ),
     );

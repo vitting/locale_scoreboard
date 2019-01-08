@@ -49,7 +49,7 @@ class StatisticData {
   }
 
   Future<int> delete() {
-    return DbHelpers.delete(DbSql.tableStatistics, id);
+    return DbHelpers.deleteById(DbSql.tableStatistics, id);
   }
 
   Map<String, dynamic> toMap() {

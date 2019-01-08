@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_number_of_point_for_set.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_order_of_serve_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/controls/set_start_with_serve_widget.dart';
@@ -8,9 +9,7 @@ import 'package:locale_scoreboard/ui/scoreboard/board/controls/start_match_widge
 class SetupSetContainer extends StatelessWidget {
   final Color teamAButtonColor;
   final Color teamBButtonColor;
-  final Stream<int> numberOfPointsInSetStream;
-  final Stream<int> winnerOfDrawSelectedButtonStream;
-  final Stream<int> startWithServeSelectedButtonStream;
+  final Stream<ControllerData> stream;
   final ValueChanged<int> onTapSetNumberOfPointsForSet;
   final ValueChanged<bool> onTapSetOrderOfServe;
   final ValueChanged<int> onTapSetStartWithServe;
@@ -20,7 +19,7 @@ class SetupSetContainer extends StatelessWidget {
   final int winnerOfDraw;
   final int setStartWithServe;
 
-  const SetupSetContainer({Key key, this.teamAButtonColor, this.teamBButtonColor, this.numberOfPointsInSetStream, this.winnerOfDrawSelectedButtonStream, this.startWithServeSelectedButtonStream, this.onTapSetNumberOfPointsForSet, this.onTapSetOrderOfServe, this.onTapSetStartWithServe, this.onTapSetWinnerOfDraw, this.onTapStartMatch, this.pointsInSet, this.setStartWithServe, this.winnerOfDraw}) : super(key: key);
+  const SetupSetContainer({Key key, this.teamAButtonColor, this.teamBButtonColor, this.stream, this.onTapSetNumberOfPointsForSet, this.onTapSetOrderOfServe, this.onTapSetStartWithServe, this.onTapSetWinnerOfDraw, this.onTapStartMatch, this.pointsInSet, this.setStartWithServe, this.winnerOfDraw}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -28,7 +27,7 @@ class SetupSetContainer extends StatelessWidget {
         children: <Widget>[
           SetNumberOfPointsForSet(
             pointsInSet: pointsInSet,
-            pointsInSetStream: numberOfPointsInSetStream,
+            pointsInSetStream: stream,
             onTapPoints: onTapSetNumberOfPointsForSet,
           ),
           SizedBox(
@@ -36,7 +35,7 @@ class SetupSetContainer extends StatelessWidget {
           ),
           SetWinnerOfDraw(
             winnerOfDraw: winnerOfDraw,
-            selectedButtonStream: winnerOfDrawSelectedButtonStream,
+            selectedButtonStream: stream,
             onTapTeam: onTapSetWinnerOfDraw,
             teamAButtonColor: teamAButtonColor,
             teamBButtonColor: teamAButtonColor,
@@ -52,7 +51,7 @@ class SetupSetContainer extends StatelessWidget {
           ),
           SetStartWithServe(
             setStartWithServe: setStartWithServe,
-            selectedButtonStream: startWithServeSelectedButtonStream,
+            selectedButtonStream: stream,
             onTapTeam: onTapSetStartWithServe,
             teamAButtonColor: teamAButtonColor,
             teamBButtonColor: teamAButtonColor,

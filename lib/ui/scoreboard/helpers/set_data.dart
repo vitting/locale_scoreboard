@@ -1,3 +1,4 @@
+import 'package:locale_scoreboard/helpers/datetime_helpers.dart';
 import 'package:locale_scoreboard/helpers/db_helpers.dart';
 import 'package:locale_scoreboard/helpers/db_sql_create.dart';
 import 'package:locale_scoreboard/helpers/system_helpers.dart';
@@ -32,6 +33,10 @@ class SetData {
       this.setStart,
       this.setEnd,
       this.winnerTeam});
+
+  int getSetTime() {
+    return DateTimeHelpers.totalTime(setStart, setEnd).inMinutes;
+  }
 
   Future<int> save() {
     id = SystemHelpers.generateUuid();

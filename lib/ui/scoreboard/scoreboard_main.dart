@@ -3,8 +3,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:locale_scoreboard/helpers/datetime_helpers.dart';
 import 'package:locale_scoreboard/helpers/db_helpers.dart';
 import 'package:locale_scoreboard/helpers/db_sql_create.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/dialog_yes_no_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/scoreboard_board.dart';
 import 'package:locale_scoreboard/ui/scoreboard/create/scoreboard_create_main.dart';
+import 'package:locale_scoreboard/ui/scoreboard/helpers/dialog_round_button_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/match_data.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/score_data.dart';
 
@@ -49,7 +51,7 @@ class _ScoreboardState extends State<Scoreboard> {
             return ListView.builder(
               itemCount: m.length,
               itemBuilder: (BuildContext context, int position) {
-                MatchData match = m[position];                
+                MatchData match = m[position];
                 return Card(
                   child: ListTile(
                       onLongPress: () async {
@@ -142,23 +144,35 @@ class _ScoreboardState extends State<Scoreboard> {
     return showDialog<DeleteDialogResult>(
         context: context,
         builder: (BuildContext dialogContext) => AlertDialog(
-              title: Text("Delete"),
-              content:
-                  Text("Do you want to Delete the Match?\n\n${match.title}"),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text("No"),
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop(DeleteDialogResult.no);
-                  },
+            title: Text("Delete"),
+            content: Container(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text("Do you want to Delete the Match?\n\n${match.title}"),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
                 ),
-                FlatButton(
-                  child: Text("Yes"),
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop(DeleteDialogResult.yes);
-                  },
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    DialogRoundButton(
+                      color: Colors.blue,
+                      title: "NO",
+                      onTap: () {
+                        Navigator.of(dialogContext).pop(DeleteDialogResult.no);
+                      },
+                    ),
+                    DialogRoundButton(
+                      color: Colors.green[900],
+                      title: "YES",
+                      onTap: () {
+                        Navigator.of(dialogContext).pop(DeleteDialogResult.yes);
+                      },
+                    ),
+                  ],
                 )
               ],
-            ));
+            ))));
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
 import 'package:vibrate/vibrate.dart';
 
@@ -10,6 +11,7 @@ class TeamServe {
 }
 
 class TeamPlayerNames extends StatefulWidget {
+  final int team;
   final String player1Name;
   final String player2Name;
   final Color teamColor;
@@ -17,10 +19,11 @@ class TeamPlayerNames extends StatefulWidget {
   final Color playerActiveColor;
   final int playerActive;
   final ValueChanged<TeamServe> onSetServeOrder;
-  final Stream<TeamServe> teamOrderOfServeStream;
+  final Stream<ControllerData> teamOrderOfServeStream;
 
   const TeamPlayerNames(
       {Key key,
+      this.team,
       this.player1Name,
       this.player2Name,
       this.teamActiveColor,
@@ -47,14 +50,17 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
   void initState() {
     super.initState();
 
-    widget.teamOrderOfServeStream.listen((TeamServe serve) {
-      if (mounted) {
-        setState(() {
-          if (serve != null) {
-            _player1ServeOrder = serve.first;
-            _player2ServeOrder = serve.second;
-          }
-        });
+    widget.teamOrderOfServeStream.listen((ControllerData item) {
+      if ((item.type == ControllerType.serveOrderTeam1 && widget.team == 1) ||
+          (item.type == ControllerType.serveOrderTeam2 && widget.team == 2)) {
+        if (mounted) {
+          setState(() {
+            if (item.data != null) {
+              _player1ServeOrder = item.data.first;
+              _player2ServeOrder = item.data.second;
+            }
+          });
+        }
       }
     });
   }
@@ -95,24 +101,26 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
                               _player1ServeOrder.toString(),
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: widget.playerActive == 1
-                                      ? Colors.white
-                                      : Colors.blue[600],
+                                  color: Colors.blue[600],
                                   fontWeight: FontWeight.bold),
                             ),
                             width: 16,
                             height: 16,
                             decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: widget.playerActive == 1
-                                    ? widget.playerActiveColor
-                                    : Colors.white),
+                                shape: BoxShape.circle, color: Colors.white),
                           )
                         : Container(),
                     Expanded(
                       child: Text(widget.player1Name,
                           style: TextStyle(
-                              fontSize: 16.0, color: widget.teamColor)),
+                              fontSize: 16.0,
+                              fontWeight: widget.playerActive == 1
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: widget.teamColor,
+                              decoration: widget.playerActive == 1
+                                  ? TextDecoration.underline
+                                  : TextDecoration.none)),
                     ),
                   ],
                 )),
@@ -138,24 +146,26 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
                               _player2ServeOrder.toString(),
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: widget.playerActive == 2
-                                      ? Colors.white
-                                      : Colors.blue[600],
+                                  color: Colors.blue[600],
                                   fontWeight: FontWeight.bold),
                             ),
                             width: 16,
                             height: 16,
                             decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: widget.playerActive == 2
-                                    ? widget.playerActiveColor
-                                    : Colors.white),
+                                shape: BoxShape.circle, color: Colors.white),
                           )
                         : Container(),
                     Expanded(
                       child: Text(widget.player2Name,
                           style: TextStyle(
-                              fontSize: 16.0, color: widget.teamColor)),
+                              fontSize: 16.0,
+                              color: widget.teamColor,
+                              decoration: widget.playerActive == 2
+                                  ? TextDecoration.underline
+                                  : TextDecoration.none,
+                              fontWeight: widget.playerActive == 2
+                                  ? FontWeight.bold
+                                  : FontWeight.normal)),
                     ),
                   ],
                 )),

@@ -107,9 +107,14 @@ class DbHelpers {
     return dbCon.update(table, item, where: where, whereArgs: whereArgs);
   }
 
-  static Future<int> delete(String table, String id) async {
+  static Future<int> deleteById(String table, String id) async {
     Database dbCon = await db;
     return dbCon.delete(table, where: "${DbSql.colId} = ?", whereArgs: [id]);
+  }
+
+  static Future<int> deleteByMatchId(String table, String matchId) async {
+    Database dbCon = await db;
+    return dbCon.delete(table, where: "${DbSql.colMatchId} = ?", whereArgs: [matchId]);
   }
 
   static Future<List<Map<String, dynamic>>> query(String table,

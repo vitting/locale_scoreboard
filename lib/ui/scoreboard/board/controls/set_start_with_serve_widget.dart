@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
 import 'package:vibrate/vibrate.dart';
 
@@ -6,7 +7,7 @@ class SetStartWithServe extends StatefulWidget {
   final ValueChanged<int> onTapTeam;
   final Color teamAButtonColor;
   final Color teamBButtonColor;
-  final Stream<int> selectedButtonStream;
+  final Stream<ControllerData> selectedButtonStream;
   final int setStartWithServe;
 
   const SetStartWithServe(
@@ -14,7 +15,8 @@ class SetStartWithServe extends StatefulWidget {
       this.onTapTeam,
       this.teamAButtonColor,
       this.teamBButtonColor,
-      this.selectedButtonStream, this.setStartWithServe})
+      this.selectedButtonStream,
+      this.setStartWithServe})
       : super(key: key);
 
   @override
@@ -36,11 +38,13 @@ class SetStartWithServeState extends State<SetStartWithServe> {
       });
     }
 
-    widget.selectedButtonStream.listen((int value) {
-      if (mounted) {
-        setState(() {
-          _selected = value;
-        });
+    widget.selectedButtonStream.listen((ControllerData item) {
+      if (item.type == ControllerType.startWithServe) {
+        if (mounted) {
+          setState(() {
+            _selected = item.data;
+          });
+        }
       }
     });
   }

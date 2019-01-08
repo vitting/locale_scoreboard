@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
 import 'package:vibrate/vibrate.dart';
 
 class SetNumberOfPointsForSet extends StatefulWidget {
   final ValueChanged<int> onTapPoints;
-  final Stream<int> pointsInSetStream;
+  final Stream<ControllerData> pointsInSetStream;
   final int pointsInSet;
 
   const SetNumberOfPointsForSet(
@@ -28,12 +29,13 @@ class SetNumberOfPointsForSetState extends State<SetNumberOfPointsForSet> {
         _numberOfPointsInSet = widget.pointsInSet;
       });
     }
-    widget.pointsInSetStream.listen((int points) {
-      if (mounted) {
-        setState(() {
-          print(points);
-          _numberOfPointsInSet = points;
-        });
+    widget.pointsInSetStream.listen((ControllerData item) {
+      if (item.type == ControllerType.numberOfPointsInSet) {
+        if (mounted) {
+          setState(() {
+            _numberOfPointsInSet = item.data;
+          });
+        }
       }
     });
   }

@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/dialog_round_button_widget.dart';
 
 class DialogYesNo extends StatelessWidget {
-  final int team;
+  final String title;
   final Widget content;
   final ValueChanged<bool> onTap;
   
-  const DialogYesNo({Key key, this.team, this.content, this.onTap}) : super(key: key);
+  const DialogYesNo({Key key, this.title, this.content, this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AlertDialog(
+      title: Text(title),
+      content: Container(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
@@ -39,6 +41,7 @@ class DialogYesNo extends StatelessWidget {
                   )
                 ],
               ),
-            );
+            ),
+    );
   }
 }

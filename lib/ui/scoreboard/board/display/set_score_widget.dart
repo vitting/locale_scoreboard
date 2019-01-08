@@ -6,22 +6,30 @@ class SetScore extends StatelessWidget {
   final int setNumber;
   final int setTime;
   final int winnerTeam;
+  final bool lastItem;
 
-  const SetScore({Key key, this.teamAPoints, this.teamBPoints, this.setNumber, this.setTime, this.winnerTeam}) : super(key: key);
+  const SetScore({Key key, this.teamAPoints, this.teamBPoints, this.setNumber, this.setTime, this.winnerTeam, this.lastItem = false}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: <Widget>[
-        Text(teamAPoints.toString(),
-            style: TextStyle(color: Colors.white, fontWeight: winnerTeam == 1 ? FontWeight.bold : FontWeight.normal)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          child:
-              Text("(${setNumber.toString()}. set - ${setTime.toString()} min.)", style: TextStyle(color: Colors.white)),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(teamAPoints >= 10 ? teamAPoints.toString() : '0' + teamAPoints.toString(),
+                style: TextStyle(color: Colors.white, fontWeight: winnerTeam == 1 ? FontWeight.bold : FontWeight.normal)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child:
+                  Text("(${setNumber.toString()}. set - ${setTime.toString()} min.)", style: TextStyle(color: Colors.white)),
+            ),
+            Text(teamBPoints >= 10 ? teamBPoints.toString() : '0' + teamBPoints.toString(), style: TextStyle(color: Colors.white, fontWeight: winnerTeam == 2 ? FontWeight.bold : FontWeight.normal))
+          ],
         ),
-        Text(teamBPoints.toString(), style: TextStyle(color: Colors.white, fontWeight: winnerTeam == 2 ? FontWeight.bold : FontWeight.normal)),
+        !lastItem ? SizedBox(
+          height: 5,
+        ) : Container()
       ],
     );
   }

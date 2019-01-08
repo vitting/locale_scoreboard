@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:locale_scoreboard/helpers/controller_data.dart';
 
 class TimerValues {
   final TimerState timerState;
@@ -12,7 +13,7 @@ class TimerValues {
 enum TimerState { start, cancel, reset, setTime }
 
 class SetTime extends StatefulWidget {
-  final Stream<TimerValues> timeStream;
+  final Stream<ControllerData> timeStream;
   final ValueChanged<int> onTimeChange;
 
   const SetTime({Key key, this.timeStream, this.onTimeChange})
@@ -31,49 +32,51 @@ class _SetTimeState extends State<SetTime> {
   @override
   void initState() {
     super.initState();
-    
-    widget.timeStream.listen((TimerValues state) {
-      switch (state.timerState) {
-        case TimerState.start:
-          _elapsedTime = state.time;
-          if (_timer == null) {
-            _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
-              _elapsedTime += 1;
-              formatTime();
+
+    widget.timeStream.listen((ControllerData item) {
+      if (item.type == ControllerType.time) {
+        switch (item.data.timerState) {
+          case TimerState.start:
+            _elapsedTime = item.data.time;
+            if (_timer == null) {
+              _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
+                _elapsedTime += 1;
+                formatTime();
+                if (widget.onTimeChange != null) {
+                  widget.onTimeChange(_elapsedTime);
+                }
+              });
+            }
+            break;
+          case TimerState.reset:
+            if (_timer != null) {
               if (widget.onTimeChange != null) {
                 widget.onTimeChange(_elapsedTime);
               }
-            });
-          }
-          break;
-        case TimerState.reset:
-          if (_timer != null) {
+              _timer?.cancel();
+              _timer = null;
+              _elapsedTimeMinutes = 0;
+              _elapsedTimeSeconds = 0;
+              _elapsedTime = 0;
+
+              setState(() {
+                _elapsedTimeSecondsFormatted = "00";
+                _elapsedTimeMinutesFormatted = "00";
+              });
+            }
+            break;
+          case TimerState.cancel:
             if (widget.onTimeChange != null) {
               widget.onTimeChange(_elapsedTime);
-            } 
-            _timer?.cancel();
-            _timer = null;
-            _elapsedTimeMinutes = 0;
-            _elapsedTimeSeconds = 0;
-            _elapsedTime = 0;
-
-            setState(() {
-              _elapsedTimeSecondsFormatted = "00";
-              _elapsedTimeMinutesFormatted = "00";
-            });
-          }
-          break;
-        case TimerState.cancel:
-          if (widget.onTimeChange != null) {
-            widget.onTimeChange(_elapsedTime);
-          }
-          if (_timer != null) {
-            _timer?.cancel();
-            _timer = null;
-          }
-          break;
-        case TimerState.setTime:
-          break;
+            }
+            if (_timer != null) {
+              _timer?.cancel();
+              _timer = null;
+            }
+            break;
+          case TimerState.setTime:
+            break;
+        }
       }
     });
   }
