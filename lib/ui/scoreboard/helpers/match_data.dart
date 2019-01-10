@@ -52,7 +52,7 @@ class MatchData {
   Future<List<SetData>> getSets() async {
     List<SetData> setsData = [];
     List<Map<String, dynamic>> sets = await DbHelpers.query(DbSql.tableSets,
-        where: "matchId = ?", whereArgs: [this.id]);
+        where: "matchId = ?", whereArgs: [this.id], orderBy: "setNumber asc");
     if (sets.length != 0) {
       setsData = sets.map<SetData>((Map<String, dynamic> s) {
         return SetData.fromMap(s);
