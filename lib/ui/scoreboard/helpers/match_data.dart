@@ -15,6 +15,7 @@ class MatchData {
   String namePlayer1Team2;
   String namePlayer2Team2;
   bool active;
+  int winnerTeam;
 
   MatchData(
       {this.id,
@@ -26,29 +27,38 @@ class MatchData {
       this.namePlayer2Team1,
       this.namePlayer1Team2,
       this.namePlayer2Team2,
-      this.active});
+      this.active,
+      this.winnerTeam = 0});
+
+  Future<int> updateMatchWinnerTeam(int team) {
+    winnerTeam = team;
+    return DbHelpers.updateMatchWinnerTeam(team, id);
+  }
 
   Future<int> updateMatchStarted(DateTime time) {
     matchStartedAt = time;
     active = true;
-    return DbHelpers.updateMatchStartedAt(matchStartedAt.millisecondsSinceEpoch, active, id);  
+    return DbHelpers.updateMatchStartedAt(
+        matchStartedAt.millisecondsSinceEpoch, active, id);
   }
 
   Future<int> updateMatchEnded(DateTime time) {
     matchEndedAt = time;
     active = false;
-    return DbHelpers.updateMatchEndedAt(matchEndedAt.millisecondsSinceEpoch, active, id);  
+    return DbHelpers.updateMatchEndedAt(
+        matchEndedAt.millisecondsSinceEpoch, active, id);
   }
 
   Future<List<SetData>> getSets() async {
     List<SetData> setsData = [];
-    List<Map<String, dynamic>> sets = await DbHelpers.query(DbSql.tableSets, where: "matchId = ?", whereArgs: [this.id]);
+    List<Map<String, dynamic>> sets = await DbHelpers.query(DbSql.tableSets,
+        where: "matchId = ?", whereArgs: [this.id]);
     if (sets.length != 0) {
       setsData = sets.map<SetData>((Map<String, dynamic> s) {
         return SetData.fromMap(s);
       }).toList();
     }
-    
+
     return setsData;
   }
 
@@ -78,8 +88,7 @@ class MatchData {
     title =
         "$namePlayer1Team1, $namePlayer2Team1 vs. $namePlayer1Team2, $namePlayer2Team2";
 
-    ScoreData score =
-        ScoreData(matchId: id, elapsedTime: Duration(seconds: 0));
+    ScoreData score = ScoreData(matchId: id, elapsedTime: Duration(seconds: 0));
     await score.initScores();
     return DbHelpers.insert(DbSql.tableMatches, this.toMap());
   }
@@ -102,8 +111,13 @@ class MatchData {
       "namePlayer2Team1": namePlayer2Team1,
       "namePlayer1Team2": namePlayer1Team2,
       "namePlayer2Team2": namePlayer2Team2,
-      "active": active
+      "active": active,
+      "winnerTeam": winnerTeam
     };
+  }
+
+  static Future<List<Map<String, dynamic>>> getMatches() {
+    return DbHelpers.query(DbSql.tableMatches, orderBy: "createdDate desc");
   }
 
   factory MatchData.fromMap(Map<String, dynamic> item) {
@@ -118,6 +132,7 @@ class MatchData {
         namePlayer2Team1: item["namePlayer2Team1"],
         namePlayer1Team2: item["namePlayer1Team2"],
         namePlayer2Team2: item["namePlayer2Team2"],
-        active: item["active"] == 1);
+        active: item["active"] == 1,
+        winnerTeam: item["winnerTeam"]);
   }
 }

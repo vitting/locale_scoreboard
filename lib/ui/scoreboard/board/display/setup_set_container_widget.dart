@@ -18,8 +18,9 @@ class SetupSetContainer extends StatelessWidget {
   final int pointsInSet;
   final int winnerOfDraw;
   final int setStartWithServe;
+  final bool matchButton;
 
-  const SetupSetContainer({Key key, this.teamAButtonColor, this.teamBButtonColor, this.stream, this.onTapSetNumberOfPointsForSet, this.onTapSetOrderOfServe, this.onTapSetStartWithServe, this.onTapSetWinnerOfDraw, this.onTapStartMatch, this.pointsInSet, this.setStartWithServe, this.winnerOfDraw}) : super(key: key);
+  const SetupSetContainer({Key key, this.teamAButtonColor, this.teamBButtonColor, this.stream, this.onTapSetNumberOfPointsForSet, this.onTapSetOrderOfServe, this.onTapSetStartWithServe, this.onTapSetWinnerOfDraw, this.onTapStartMatch, this.pointsInSet, this.setStartWithServe, this.winnerOfDraw, this.matchButton = true}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -60,6 +61,7 @@ class SetupSetContainer extends StatelessWidget {
             height: 20,
           ),
           StartMatch(
+            matchButton: matchButton,
             onTap: onTapStartMatch,
           )
         ],

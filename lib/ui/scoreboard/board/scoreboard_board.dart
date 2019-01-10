@@ -3,6 +3,7 @@ import 'package:locale_scoreboard/helpers/board_theme.dart';
 import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/dialog_ok_widget.dart';
+import 'package:locale_scoreboard/ui/scoreboard/board/dialog_team_won.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/dialog_yes_no_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/controls_container_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/results_container_widget.dart';
@@ -54,6 +55,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   bool _showBox1 = false;
   bool _canLongPressNames = true;
   int _elapsedTime = 0;
+  int _state = 0;
   ScoreData _scoreData;
   List<SetData> _sets = [];
   CrossFadeState _mainControlsDisplay = CrossFadeState.showFirst;
@@ -68,13 +70,14 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   void _initData() async {
     _scoreData = await widget.match.getScore();
     List<SetData> sets = await widget.match.getSets();
-    print("State: ${_scoreData.state}");
+
     if (mounted) {
       setState(() {
         _teamAPlayer1 = widget.match.namePlayer1Team1;
         _teamAPlayer2 = widget.match.namePlayer2Team1;
         _teamBPlayer1 = widget.match.namePlayer1Team2;
         _teamBPlayer2 = widget.match.namePlayer2Team2;
+        _state = _scoreData.state;
 
         if (_scoreData.state != 3) {
           _teamAPoints = _scoreData.pointsTeam1;
@@ -231,7 +234,9 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                       padding: const EdgeInsets.only(bottom: 10),
                       child: _sets.length != 0
                           ? SetScoreContainer(
+                              matchEnded: _scoreData.state == 3,
                               sets: _sets,
+                              winnerTeam: 1,
                             )
                           : Container(),
                     ),
@@ -268,6 +273,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
 
   Widget _setupSet() {
     return SetupSetContainer(
+        matchButton: _state != 1,
         teamAButtonColor: BoardTheme.teamADefaultColor,
         teamBButtonColor: BoardTheme.teamBDefaultColor,
         pointsInSet: _pointsInSet,
@@ -313,7 +319,6 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
 
   Widget _results() {
     return ResultsContainer(
-      sets: _sets,
       teamAColor: BoardTheme.teamATextColor,
       teamBColor: BoardTheme.teamBTextColor,
       teamAColorActive: _teamAColorActive,
@@ -562,11 +567,44 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     if (result != null && result == true) {
       _showControls(false);
     } else if (result != null && result == false) {
-      _matchWon();
+      _showWinnerOfMatch(context);
     }
   }
 
-  void _showSetWon(BuildContext context, int team) async {
+  Future<void> _showWinnerOfMatch(BuildContext context) async {
+    int result = await showDialog<int>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) {
+          return DialogTeamWon(
+            title: "Winner of match",
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text("Select Team that won the match:"),
+                    )
+                  ],
+                )
+              ],
+            ),
+            onTap: (int value) {
+              if (MainInherited.of(context).canVibrate) {
+                Vibrate.feedback(FeedbackType.medium);
+              }
+              Navigator.of(dialogContext).pop(value);
+            },
+          );
+        });
+
+    if (result != null) {
+      _matchWon(result);
+    }
+  }
+
+  Future<void> _showSetWon(BuildContext context, int team) async {
     bool result = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
@@ -614,6 +652,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     List<SetData> sets = await widget.match.getSets();
 
     setState(() {
+      _state = _scoreData.state;
       _sets = sets;
       _teamAPoints = _scoreData.pointsTeam1;
       _teamBPoints = _scoreData.pointsTeam2;
@@ -627,17 +666,31 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     });
   }
 
-  Future<void> _matchWon() async {
+  Future<void> _matchWon(int winnerTeam) async {
     _boardController.add(
         ControllerData(ControllerType.time, TimerValues(TimerState.cancel, 0)));
     await _scoreData.updateState(3);
     await widget.match.updateMatchEnded(DateTime.now());
-    setState(() {
-      _controlStep = 0;
-    });
+    await widget.match.updateMatchWinnerTeam(winnerTeam);
+    _startWithServe(0);
+    _setWinnerOfDraw(0);
+    _setActiveTeam(0);
+    _boardController
+        .add(ControllerData(ControllerType.serveOrderTeam1, TeamServe(0, 0)));
+    _boardController
+        .add(ControllerData(ControllerType.serveOrderTeam2, TeamServe(0, 0)));
+
+    if (mounted) {
+      setState(() {
+        _canLongPressNames = false;
+        _mainControlsDisplay = CrossFadeState.showFirst;
+        _mainDisplay = CrossFadeState.showFirst;
+        _controlStep = 2;
+      });
+    }
   }
 
-  void _showSideChange(BuildContext context) async {
+  Future<void> _showSideChange(BuildContext context) async {
     await showDialog<bool>(
         context: context,
         barrierDismissible: false,
@@ -731,7 +784,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     });
   }
 
-  void _pointsOnLongPress(int team) async {
+  Future<void> _pointsOnLongPress(int team) async {
     int result = await showModalBottomSheet<int>(
         context: context,
         builder: (BuildContext bottomModalContext) {

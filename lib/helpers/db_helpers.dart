@@ -202,4 +202,9 @@ class DbHelpers {
     Database dbCon = await db;
     return dbCon.rawUpdate("UPDATE matches SET matchEndedAt = ?, active = ? WHERE id = ?", [matchEndedAt, active, id]);
   }
+
+  static Future<int> updateMatchWinnerTeam(int team, String id) async {
+    Database dbCon = await db;
+    return dbCon.rawUpdate("UPDATE matches SET winnerTeam = ? WHERE id = ?", [team, id]);
+  }
 }

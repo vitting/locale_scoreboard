@@ -53,10 +53,6 @@ class ScoreData {
       this.activeTeam = 0,
       this.state = 0});
 
-  // save -> save statistic
-  // save set
-  // delete set
-
   Future<int> updateState(int state) {
     this.state = state;
     return DbHelpers.updateScoreState(state, id);

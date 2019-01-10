@@ -8,6 +8,7 @@ class BoardTheme {
   static final Color teamADefaultColor = Colors.blue[900];
   static final Color teamBDefaultColor = Colors.blue[500];
   static final Color teamActiveColor = Colors.deepOrange[900];
+  static final Color buttonColor = Colors.deepOrange[900];
   static final BoxDecoration background = BoxDecoration(
       gradient: LinearGradient(
     begin: Alignment.topLeft,

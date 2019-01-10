@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
 import 'package:vibrate/vibrate.dart';
@@ -21,6 +22,7 @@ class TeamPlayerNames extends StatefulWidget {
   final ValueChanged<TeamServe> onSetServeOrder;
   final Stream<ControllerData> teamOrderOfServeStream;
   final bool canLongPress;
+  final bool showWinner;
 
   const TeamPlayerNames(
       {Key key,
@@ -33,7 +35,7 @@ class TeamPlayerNames extends StatefulWidget {
       this.playerActiveColor,
       this.onSetServeOrder,
       this.teamOrderOfServeStream,
-      this.canLongPress = true})
+      this.canLongPress = true, this.showWinner = false})
       : super(key: key);
 
   @override
@@ -80,13 +82,15 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
             color: widget.teamActiveColor,
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(color: widget.teamColor, width: 1.0)),
-        child: Column(
+        child: Stack(
+          children: <Widget>[
+            Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             InkWell(
                 key: _keyPlayer1Name,
-                onLongPress: () async {
+                onTap: () async {
                   if (widget.canLongPress) {
                     TeamServe teamServe = await setServer(
                         context, _keyPlayer1Name, 1, widget.player1Name);
@@ -133,7 +137,7 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
             ),
             InkWell(
                 key: _keyPlayer2Name,
-                onLongPress: () async {
+                onTap: () async {
                   if (widget.canLongPress) {
                     TeamServe teamServe = await setServer(
                         context, _keyPlayer2Name, 2, widget.player2Name);
@@ -177,6 +181,15 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
                 )),
           ],
         ),
+        widget.showWinner ? Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          child: Icon(FontAwesomeIcons.trophy, color: Color.fromRGBO(255, 215, 0, 1), size: 18),
+        ) : Container()
+          ],
+        )
       ),
     );
   }

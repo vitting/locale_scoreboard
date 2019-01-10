@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:locale_scoreboard/ui/scoreboard/board/display/set_score_container_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/team_points_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/team_sets_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/display/team_timeouts_widget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/helpers/set_data.dart';
 
 class ResultsContainer extends StatelessWidget {
-  final List<SetData> sets;
   final Color teamAColor;
   final Color teamBColor;
   final Color teamAColorActive;
@@ -19,7 +16,7 @@ class ResultsContainer extends StatelessWidget {
   final int teamBTimeouts;
   final ValueChanged<int> pointsOnLongPress;
 
-  const ResultsContainer({Key key, this.sets, this.teamAColor, this.teamBColor, this.teamAColorActive, this.teamBColorActive, this.teamASets, this.teamBSets, this.teamAPoints, this.teamBPoints, this.teamATimeouts, this.teamBTimeouts, this.pointsOnLongPress}) : super(key: key);
+  const ResultsContainer({Key key, this.teamAColor, this.teamBColor, this.teamAColorActive, this.teamBColorActive, this.teamASets, this.teamBSets, this.teamAPoints, this.teamBPoints, this.teamATimeouts, this.teamBTimeouts, this.pointsOnLongPress}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(

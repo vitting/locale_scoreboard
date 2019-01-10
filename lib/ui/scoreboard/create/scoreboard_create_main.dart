@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:locale_scoreboard/helpers/board_theme.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/match_data.dart';
 
 class ScoreboardCreate extends StatefulWidget {
@@ -34,7 +36,6 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
     return Scaffold(
       appBar: AppBar(title: Text("Create Match")),
       body: Container(
-        padding: EdgeInsets.only(top: 20),
         child: ListView(
           children: <Widget>[
             Form(
@@ -42,9 +43,8 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
               child: Column(
                 children: <Widget>[
                   Container(
-                    margin: EdgeInsets.only(bottom: 20),
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 30),
-                    color: Colors.blue[900],
+                    color: BoardTheme.teamADefaultColor,
                     child: Column(
                       children: <Widget>[
                         Row(
@@ -60,6 +60,8 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                           ],
                         ),
                         TextFormField(
+                          autofocus: true,
+                          inputFormatters: [LengthLimitingTextInputFormatter(50)],
                           initialValue: _match.namePlayer1Team1,
                           style: TextStyle(color: Colors.white),
                           validator: (String value) {
@@ -75,10 +77,11 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                                       BorderSide(color: Colors.blue[500])),
                               enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(color: Colors.white)),
-                              labelText: "Player 1",
+                              labelText: "Player 1 name",
                               labelStyle: TextStyle(color: Colors.white)),
                         ),
                         TextFormField(
+                          inputFormatters: [LengthLimitingTextInputFormatter(50)],
                           initialValue: _match.namePlayer1Team2,
                           style: TextStyle(color: Colors.white),
                           validator: (String value) {
@@ -94,7 +97,7 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                                       BorderSide(color: Colors.blue[500])),
                               enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(color: Colors.white)),
-                              labelText: "Player 2",
+                              labelText: "Player 2 name",
                               labelStyle: TextStyle(color: Colors.white)),
                         )
                       ],
@@ -102,7 +105,7 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                   ),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 30),
-                    color: Colors.blue[500],
+                    color: BoardTheme.teamBDefaultColor,
                     child: Column(
                       children: <Widget>[
                         Row(
@@ -118,6 +121,7 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                           ],
                         ),
                         TextFormField(
+                          inputFormatters: [LengthLimitingTextInputFormatter(50)],
                           initialValue: _match.namePlayer1Team2,
                           style: TextStyle(color: Colors.white),
                           validator: (String value) {
@@ -133,10 +137,11 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                                       BorderSide(color: Colors.blue[900])),
                               enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(color: Colors.white)),
-                              labelText: "Player 1",
+                              labelText: "Player 1 name",
                               labelStyle: TextStyle(color: Colors.white)),
                         ),
                         TextFormField(
+                          inputFormatters: [LengthLimitingTextInputFormatter(50)],
                           initialValue: _match.namePlayer2Team2,
                           style: TextStyle(color: Colors.white),
                           validator: (String value) {
@@ -152,7 +157,7 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                                       BorderSide(color: Colors.blue[900])),
                               enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(color: Colors.white)),
-                              labelText: "Player 2",
+                              labelText: "Player 2 name",
                               labelStyle: TextStyle(color: Colors.white)),
                         )
                       ],
@@ -162,7 +167,8 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                     height: 20,
                   ),
                   FlatButton.icon(
-                    icon: Icon(Icons.check),
+                    textColor: BoardTheme.buttonColor,
+                    icon: Icon(Icons.check_circle),
                     label: Text("Save"),
                     onPressed: () async {
                       if (_formState.currentState.validate()) {
