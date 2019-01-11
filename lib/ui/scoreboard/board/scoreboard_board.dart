@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:locale_scoreboard/helpers/board_theme.dart';
 import 'package:locale_scoreboard/helpers/controller_data.dart';
+import 'package:locale_scoreboard/helpers/system_helpers.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/dialog_ok_widget.dart';
 import 'package:locale_scoreboard/ui/scoreboard/board/dialog_team_won.dart';
@@ -56,6 +57,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   bool _canLongPressNames = true;
   int _elapsedTime = 0;
   int _state = 0;
+  int _winnerTeam = 0;
   ScoreData _scoreData;
   List<SetData> _sets = [];
   CrossFadeState _mainControlsDisplay = CrossFadeState.showFirst;
@@ -68,6 +70,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   }
 
   void _initData() async {
+    SystemHelpers.setScreenOn();
     _scoreData = await widget.match.getScore();
     List<SetData> sets = await widget.match.getSets();
 
@@ -78,7 +81,8 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         _teamBPlayer1 = widget.match.namePlayer1Team2;
         _teamBPlayer2 = widget.match.namePlayer2Team2;
         _state = _scoreData.state;
-
+        _winnerTeam = widget.match.winnerTeam;
+        
         if (_scoreData.state != 3) {
           _teamAPoints = _scoreData.pointsTeam1;
           _teamBPoints = _scoreData.pointsTeam2;
@@ -147,6 +151,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
   void dispose() {
     _scoreData.updateElapsedTime(_elapsedTime);
     _boardController.close();
+    SystemHelpers.setScreenOff();
     super.dispose();
   }
 
@@ -196,6 +201,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                     Row(
                       children: <Widget>[
                         TeamPlayerNames(
+                          showWinner: _winnerTeam == 1,
                           canLongPress: _canLongPressNames,
                           team: 1,
                           teamOrderOfServeStream: _boardController.stream,
@@ -212,6 +218,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                           },
                         ),
                         TeamPlayerNames(
+                          showWinner: _winnerTeam == 2,
                           canLongPress: _canLongPressNames,
                           team: 2,
                           teamOrderOfServeStream: _boardController.stream,
@@ -680,14 +687,9 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     _boardController
         .add(ControllerData(ControllerType.serveOrderTeam2, TeamServe(0, 0)));
 
-    if (mounted) {
-      setState(() {
-        _canLongPressNames = false;
-        _mainControlsDisplay = CrossFadeState.showFirst;
-        _mainDisplay = CrossFadeState.showFirst;
-        _controlStep = 2;
-      });
-    }
+    _canLongPressNames = false;
+    
+    _showControls(false, showNone: true);
   }
 
   Future<void> _showSideChange(BuildContext context) async {
@@ -770,16 +772,22 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
     });
   }
 
-  void _showControls(bool show) {
+  void _showControls(bool show, {bool showNone = false}) {
     setState(() {
-      if (show) {
-        _mainControlsDisplay = CrossFadeState.showSecond;
-        _mainDisplay = CrossFadeState.showSecond;
-        _controlStep = 1;
-      } else {
+      if (showNone) {
         _mainControlsDisplay = CrossFadeState.showFirst;
         _mainDisplay = CrossFadeState.showFirst;
-        _controlStep = 0;
+        _controlStep = 2;
+      } else {
+        if (show) {
+          _mainControlsDisplay = CrossFadeState.showSecond;
+          _mainDisplay = CrossFadeState.showSecond;
+          _controlStep = 1;
+        } else {
+          _mainControlsDisplay = CrossFadeState.showFirst;
+          _mainDisplay = CrossFadeState.showFirst;
+          _controlStep = 0;
+        }
       }
     });
   }

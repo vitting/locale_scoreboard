@@ -15,10 +15,10 @@ environment:
 dependencies:
   sqflite: ^0.13.0+1
   uuid: ^1.0.3
-  flutter_tts: ^0.1.1
   date_format: ^1.0.5
   font_awesome_flutter: ^8.2.0
   vibrate: ^0.0.4
+  screen: ^0.0.4
   flutter:
     sdk: flutter
 
@@ -80,7 +80,10 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.io/custom-fonts/#from-packages
 
-fonts:
+  fonts:
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/Lato-Regular.ttf
     - family: Scoreboard
       fonts:
         - asset: assets/fonts/scoreboard.ttf

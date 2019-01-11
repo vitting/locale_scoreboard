@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
+import 'package:screen/screen.dart';
 
 class SystemHelpers {
   static void hideKeyboardWithNoFocus(BuildContext context) {
@@ -12,20 +13,20 @@ class SystemHelpers {
     return SystemChannels.textInput.invokeMethod('TextInput.hide');
   }
 
-  // static Future<void> setScreenOn() async {
-  //   bool isScreenOn = await Screen.isKeptOn;
-  //   if (isScreenOn == false) {
-  //     Screen.keepOn(true);
-  //   }
-  // }
+  static Future<void> setScreenOn() async {
+    bool isScreenOn = await Screen.isKeptOn;
+    if (isScreenOn == false) {
+      Screen.keepOn(true);
+    }
+  }
 
-  // static Future<void> setScreenOff() async {
-  //   bool isScreenOn = await Screen.isKeptOn;
+  static Future<void> setScreenOff() async {
+    bool isScreenOn = await Screen.isKeptOn;
 
-  //   if (isScreenOn == true) {
-  //     Screen.keepOn(false);
-  //   }
-  // }
+    if (isScreenOn == true) {
+      Screen.keepOn(false);
+    }
+  }
 
   static Future<Null> showNavigationButtons(bool show) {
     if (show) {

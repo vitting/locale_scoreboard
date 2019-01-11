@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class BoardTheme {
+  static final Color gold = Color.fromRGBO(255, 215, 0, 1);
   static final Color teamATextColor = Colors.white;
   static final Color teamBTextColor = Colors.white;
   static final Color teamAControlsColor = Colors.white;

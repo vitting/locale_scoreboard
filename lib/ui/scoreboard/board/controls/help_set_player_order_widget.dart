@@ -36,7 +36,7 @@ class HelpSetPlayerOrder extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text(
-                          "Long press names of players to set order of serve\n\nTab the box to hide",
+                          "Press names of players to set order of serve\n\nTab the box to hide",
                           style: TextStyle(color: Colors.white, fontSize: 20),
                           textAlign: TextAlign.center),
                     ],

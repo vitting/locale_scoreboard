@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:locale_scoreboard/helpers/board_theme.dart';
 import 'package:locale_scoreboard/helpers/controller_data.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
 import 'package:vibrate/vibrate.dart';
@@ -186,7 +187,7 @@ class TeamPlayerNamesState extends State<TeamPlayerNames> {
           right: 0,
           top: 0,
           bottom: 0,
-          child: Icon(FontAwesomeIcons.trophy, color: Color.fromRGBO(255, 215, 0, 1), size: 18),
+          child: Icon(FontAwesomeIcons.trophy, color: BoardTheme.gold, size: 18),
         ) : Container()
           ],
         )

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:locale_scoreboard/main_inheretedwidget.dart';
-import 'package:locale_scoreboard/ui/scoreboard/board/scoreboard_board.dart';
 import 'package:locale_scoreboard/ui/scoreboard/create/scoreboard_create_main.dart';
 import 'package:locale_scoreboard/ui/scoreboard/scoreboard_main.dart';
 import 'package:vibrate/vibrate.dart';
@@ -14,8 +13,6 @@ void main() async {
       initialRoute: "/",
       routes: <String, WidgetBuilder>{
         "/": (BuildContext context) => Scoreboard(),
-        // "/": (BuildContext context) => TestWidget(),
-        // "/": (BuildContext context) => ScoreboardBoard(),
         ScoreboardCreate.routeName: (BuildContext context) => ScoreboardCreate()
       },
     ),
