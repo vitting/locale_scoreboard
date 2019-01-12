@@ -33,6 +33,7 @@ class DbHelpers {
               await db.execute("${DbSql.createMatches}");
               await db.execute("${DbSql.createScores}");
               await db.execute("${DbSql.createSets}");
+              await db.execute("${DbSql.createPersons}");
               await db.execute("${DbSql.createStatistics}");
             } catch (error) {
               print("DB ONCONFIGURE ERROR: $error");
@@ -44,6 +45,7 @@ class DbHelpers {
               await db.execute("${DbSql.createMatches}");
               await db.execute("${DbSql.createScores}");
               await db.execute("${DbSql.createSets}");
+              await db.execute("${DbSql.createPersons}");
               await db.execute("${DbSql.createStatistics}");
             } catch (error) {
               print("DB ONCREATE ERROR: $error");
@@ -54,6 +56,7 @@ class DbHelpers {
               await db.execute("${DbSql.createMatches}");
               await db.execute("${DbSql.createScores}");
               await db.execute("${DbSql.createSets}");
+              await db.execute("${DbSql.createPersons}");
               await db.execute("${DbSql.createStatistics}");
             } catch (error) {
               print("DB ONUPGRADE ERROR: $error");
@@ -66,6 +69,7 @@ class DbHelpers {
               // await db.execute("${DbSql.dropMatches}");
               // await db.execute("${DbSql.dropScores}");
               // await db.execute("${DbSql.dropSets}");
+              // await db.execute("${DbSql.dropPersons}");
               // await db.execute("${DbSql.dropStatistics}");
 
               // print(await db.rawQuery("PRAGMA table_info(matches)"));

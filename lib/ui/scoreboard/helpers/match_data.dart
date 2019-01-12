@@ -120,6 +120,16 @@ class MatchData {
     return DbHelpers.query(DbSql.tableMatches, orderBy: "createdDate desc");
   }
 
+  ///Make a copy of match with only names
+  factory MatchData.copy(MatchData match) {
+    return MatchData(
+      namePlayer1Team1: match.namePlayer1Team1,
+      namePlayer2Team1: match.namePlayer2Team1,
+      namePlayer1Team2: match.namePlayer1Team2,
+      namePlayer2Team2: match.namePlayer2Team2
+    );
+  }
+
   factory MatchData.fromMap(Map<String, dynamic> item) {
     return MatchData(
         id: item["id"],

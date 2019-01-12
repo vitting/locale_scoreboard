@@ -8,7 +8,7 @@ import 'package:locale_scoreboard/ui/scoreboard/helpers/dialog_round_button_widg
 import 'package:locale_scoreboard/ui/scoreboard/helpers/match_data.dart';
 import 'package:vibrate/vibrate.dart';
 
-enum BottomMenuResult { delete, edit }
+enum BottomMenuResult { delete, edit, copy }
 enum DeleteDialogResult { yes, no }
 
 class Scoreboard extends StatefulWidget {
@@ -71,21 +71,52 @@ class _ScoreboardState extends State<Scoreboard> {
                         },
                         title: Row(
                           children: <Widget>[
-                            Icon(FontAwesomeIcons.solidCircle,
-                                size: 16,
-                                color: match.active
-                                    ? Colors.green[700]
-                                    : Colors.black),
+                            Tooltip(
+                              height: 65,
+                              message:
+                                  "Yellow = match not started\nGreen = match started\nBlack = match ended",
+                              child: Icon(FontAwesomeIcons.solidCircle,
+                                  size: 16,
+                                  color: match.active
+                                      ? Colors.green[700]
+                                      : match.winnerTeam == 0
+                                          ? Colors.yellow
+                                          : Colors.black),
+                            ),
                             Padding(
-                              padding: const EdgeInsets.only(left: 5),
-                              child: Text(match.title),
-                            )
+                              padding: const EdgeInsets.only(left: 10),
+                            ),
+                            Flexible(
+                                child: Text(
+                                    "${match.namePlayer1Team1}, ${match.namePlayer2Team1}",
+                                    style: TextStyle(
+                                        fontWeight: match.winnerTeam == 1
+                                            ? FontWeight.bold
+                                            : FontWeight.normal))),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 5),
+                              child: Text("vs."),
+                            ),
+                            Flexible(
+                                child: Text(
+                                    "${match.namePlayer1Team2}, ${match.namePlayer2Team2}",
+                                    style: TextStyle(
+                                        fontWeight: match.winnerTeam == 2
+                                            ? FontWeight.bold
+                                            : FontWeight.normal))),
                           ],
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(DateTimeHelpers.ddmmyyyyHHnn(match.createdDate)),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 25),
+                              child: Text(
+                                  DateTimeHelpers.ddmmyyyyHHnn(
+                                      match.createdDate),
+                                  textAlign: TextAlign.center),
+                            ),
                           ],
                         )));
               },
@@ -114,6 +145,13 @@ class _ScoreboardState extends State<Scoreboard> {
                 },
               ),
               ListTile(
+                leading: Icon(Icons.content_copy),
+                title: Text("Copy Match (only names)"),
+                onTap: () {
+                  Navigator.of(modalContext).pop(BottomMenuResult.copy);
+                },
+              ),
+              ListTile(
                 leading: Icon(Icons.delete),
                 title: Text("Delete Match"),
                 onTap: () {
@@ -130,6 +168,9 @@ class _ScoreboardState extends State<Scoreboard> {
 
     if (result != null) {
       switch (result) {
+        case BottomMenuResult.copy:
+          _copyMatch(context, match);
+          break;
         case BottomMenuResult.edit:
           _editMatch(context, match);
           break;
@@ -145,6 +186,12 @@ class _ScoreboardState extends State<Scoreboard> {
           break;
       }
     }
+  }
+
+  void _copyMatch(BuildContext context, MatchData match) async {
+    MatchData matchData = MatchData.copy(match);
+    await matchData.save();
+    setState(() {});
   }
 
   void _editMatch(BuildContext context, MatchData match) {

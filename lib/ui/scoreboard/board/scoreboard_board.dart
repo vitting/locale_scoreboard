@@ -82,7 +82,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         _teamBPlayer2 = widget.match.namePlayer2Team2;
         _state = _scoreData.state;
         _winnerTeam = widget.match.winnerTeam;
-        
+
         if (_scoreData.state != 3) {
           _teamAPoints = _scoreData.pointsTeam1;
           _teamBPoints = _scoreData.pointsTeam2;
@@ -211,7 +211,7 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
                           teamActiveColor: _teamAColorActive,
                           playerActiveColor: BoardTheme.teamADefaultColor,
                           playerActive: 0,
-                          onSetServeOrder: (teamServe) {
+                          onSetServeOrder: (TeamServe teamServe) {
                             if (teamServe != null) {
                               _saveServeOrder(1, teamServe);
                             }
@@ -688,7 +688,11 @@ class _ScoreboardBoardState extends State<ScoreboardBoard>
         .add(ControllerData(ControllerType.serveOrderTeam2, TeamServe(0, 0)));
 
     _canLongPressNames = false;
-    
+
+    setState(() {
+      _winnerTeam = widget.match.winnerTeam;
+    });
+
     _showControls(false, showNone: true);
   }
 

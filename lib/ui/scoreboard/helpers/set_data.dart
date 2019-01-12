@@ -35,7 +35,8 @@ class SetData {
       this.winnerTeam});
 
   int getSetTime() {
-    return DateTimeHelpers.totalTime(setStart, setEnd).inMinutes;
+    double time = DateTimeHelpers.totalTime(setStart, setEnd).inSeconds / 60;
+    return time.ceil();
   }
 
   Future<int> save() {

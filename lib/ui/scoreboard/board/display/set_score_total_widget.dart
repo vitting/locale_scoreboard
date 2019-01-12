@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:locale_scoreboard/helpers/board_theme.dart';
 import 'package:locale_scoreboard/ui/scoreboard/helpers/set_data.dart';
 
 class SetScoreTotal extends StatefulWidget {
@@ -54,14 +56,35 @@ class SetScoreTotalState extends State<SetScoreTotal> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text(
+              Stack(
+                overflow: Overflow.visible,
+                children: <Widget>[
+                  Text(
                   "${_pointsTeamA < 10 ? '0' + _pointsTeamA.toString() : _pointsTeamA.toString()}",
                   style: TextStyle(color: Colors.white, fontWeight: widget.winnerTeam == 1 ? FontWeight.w900 : FontWeight.normal)),
+                  widget.winnerTeam == 1 ? Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: 22,
+                    child: Icon(FontAwesomeIcons.trophy, color: BoardTheme.gold, size: 12),
+                  ) : Container()
+                ],
+              ),
               Text("${_totalTime.toString()} min.",
                   style: TextStyle(color: Colors.white)),
-              Text(
+              Stack(
+                overflow: Overflow.visible,
+                children: <Widget>[
+                  Text(
                   "${_pointsTeamB < 10 ? '0' + _pointsTeamB.toString() : _pointsTeamB.toString()}",
-                  style: TextStyle(color: Colors.white, fontWeight: widget.winnerTeam == 2 ? FontWeight.w900 : FontWeight.normal))
+                  style: TextStyle(color: Colors.white, fontWeight: widget.winnerTeam == 2 ? FontWeight.w900 : FontWeight.normal)),
+                  widget.winnerTeam == 2 ? Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: -22,
+                    child: Icon(FontAwesomeIcons.trophy, color: BoardTheme.gold, size: 12)) : Container()
+                ],
+              )
             ],
           ),
         ],
