@@ -242,7 +242,9 @@ class _ScoreboardCreateState extends State<ScoreboardCreate> {
                     height: 20,
                   ),
                   FlatButton.icon(
-                    textColor: BoardTheme.buttonColor,
+                    shape: StadiumBorder(),
+                    color: Colors.blue[700],
+                    textColor: Colors.white,
                     icon: Icon(Icons.check_circle),
                     label: Text("Save"),
                     onPressed: () async {

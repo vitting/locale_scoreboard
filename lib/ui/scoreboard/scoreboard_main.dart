@@ -25,7 +25,7 @@ class _ScoreboardState extends State<Scoreboard> {
         title: Text("Matches"),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.deepOrange,
+        backgroundColor: Colors.blue[700],
         onPressed: () async {
           if (MainInherited.of(context).canVibrate) {
             Vibrate.feedback(FeedbackType.medium);
