@@ -27,56 +27,62 @@ class _DialogPersonsState extends State<DialogPersons> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      primary: false,
-      shrinkWrap: true,
-      itemCount: _persons.length,
-      itemBuilder: (BuildContext context, int position) {
-        PersonData person = _persons[position];
-        return ListTile(
-          leading: IconButton(
-            icon: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                  color: Colors.blue[700],
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.black, width: 1.0)),
-              child: Center(
-                  child: Icon(Icons.person_add, color: Colors.white, size: 20)),
-            ),
-            onPressed: () {
-              if (MainInherited.of(context).canVibrate) {
-                Vibrate.feedback(FeedbackType.medium);
-              }
-              Navigator.of(context).pop(person.name);
+    return _persons.length == 0
+        ? Container(
+            padding: EdgeInsets.symmetric(vertical: 30),
+            child: Text("No persons where found.",
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 16)))
+        : ListView.builder(
+            primary: false,
+            shrinkWrap: true,
+            itemCount: _persons.length,
+            itemBuilder: (BuildContext context, int position) {
+              PersonData person = _persons[position];
+              return ListTile(
+                leading: IconButton(
+                  icon: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                        color: Colors.blue[700],
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.black, width: 1.0)),
+                    child: Center(
+                        child: Icon(Icons.person_add,
+                            color: Colors.white, size: 20)),
+                  ),
+                  onPressed: () {
+                    if (MainInherited.of(context).canVibrate) {
+                      Vibrate.feedback(FeedbackType.medium);
+                    }
+                    Navigator.of(context).pop(person.name);
+                  },
+                ),
+                trailing: IconButton(
+                  icon: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                          color: Colors.blue[500],
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black, width: 1.0)),
+                      child: Center(
+                          child: Icon(Icons.delete_forever,
+                              color: Colors.white, size: 20))),
+                  onPressed: () async {
+                    if (MainInherited.of(context).canVibrate) {
+                      Vibrate.feedback(FeedbackType.medium);
+                    }
+                    await person.delete();
+                    List<PersonData> persons = await PersonData.getPersons();
+                    setState(() {
+                      _persons = persons;
+                    });
+                  },
+                ),
+                title: Text(person.name),
+              );
             },
-          ),
-          trailing: IconButton(
-            icon: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                    color: Colors.blue[500],
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black, width: 1.0)),
-                child: Center(
-                    child: Icon(Icons.delete_forever,
-                        color: Colors.white, size: 20))),
-            onPressed: () async {
-              if (MainInherited.of(context).canVibrate) {
-                Vibrate.feedback(FeedbackType.medium);
-              }
-              await person.delete();
-              List<PersonData> persons = await PersonData.getPersons();
-              setState(() {
-                _persons = persons;
-              });
-            },
-          ),
-          title: Text(person.name),
-        );
-      },
-    );
+          );
   }
 }

@@ -44,7 +44,11 @@ class _ScoreboardState extends State<Scoreboard> {
             AsyncSnapshot<List<Map<String, dynamic>>> matches) {
           if (!matches.hasData) return Container();
           if (matches.hasData && matches.data.length == 0)
-            return Container(child: Text("No matches"));
+            return Container(
+                child: Center(child: Text("No matches", style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 20
+                ))));
           if (matches.hasData && matches.data.length != 0) {
             List<MatchData> m =
                 matches.data.map<MatchData>((Map<String, dynamic> item) {
