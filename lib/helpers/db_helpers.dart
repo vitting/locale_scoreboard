@@ -29,16 +29,16 @@ class DbHelpers {
           print("******************Opening database**********************");
           _db = await openDatabase(path, version: dbVersion,
               onConfigure: (Database db) async {
-            try {
-              await db.execute("${DbSql.createMatches}");
-              await db.execute("${DbSql.createScores}");
-              await db.execute("${DbSql.createSets}");
-              await db.execute("${DbSql.createPersons}");
-              await db.execute("${DbSql.createStatistics}");
-            } catch (error) {
-              print("DB ONCONFIGURE ERROR: $error");
-            }
-            print("ONCONFIG");
+            // try {
+            //   await db.execute("${DbSql.createMatches}");
+            //   await db.execute("${DbSql.createScores}");
+            //   await db.execute("${DbSql.createSets}");
+            //   await db.execute("${DbSql.createPersons}");
+            //   await db.execute("${DbSql.createStatistics}");
+            // } catch (error) {
+            //   print("DB ONCONFIGURE ERROR: $error");
+            // }
+            // print("ONCONFIG");
           }, onCreate: (Database db, int version) async {
             try {
               print("ONCREATE CREATION TABLES");
