@@ -4,12 +4,15 @@ import 'package:locale_scoreboard/ui/scoreboard/create/scoreboard_create_main.da
 import 'package:locale_scoreboard/ui/scoreboard/scoreboard_main.dart';
 import 'package:vibrate/vibrate.dart';
 
+/// TODO: Add internet when developing
+
 void main() async {
   final bool canVibrate = await Vibrate.canVibrate;
 
   runApp(MainInherited(
     canVibrate: canVibrate,
     child: MaterialApp(
+      debugShowCheckedModeBanner: false,
       initialRoute: "/",
       routes: <String, WidgetBuilder>{
         "/": (BuildContext context) => Scoreboard(),
